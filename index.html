@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NoiseMaker — Brown Noise Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div>
+      <h1>NoiseMaker</h1>
+      <p class="sub">Noise + tones dashboard (vanilla JS, Web Audio API)</p>
+    </div>
+    <div class="header-controls">
+      <select id="themeSelector" title="Visual theme">
+        <option value="dark">Dark Mode</option>
+        <option value="light">Light Mode</option>
+        <option value="cyber">Cyber Mode</option>
+        <option value="neon">Neon Mode</option>
+        <option value="gothic">Gothic Mode</option>
+        <option value="claude">Claude Theme</option>
+        <option value="chatgpt">ChatGPT Theme</option>
+        <option value="cat">Cat Theme =^.^=</option>
+        <option value="dog">Dog Theme 🐕</option>
+        <option value="snake">Snake Theme 🐍</option>
+        <option value="win31">Windows 3.1</option>
+        <option value="win95">Windows 95</option>
+        <option value="cmd">Windows CMD</option>
+        <option value="linux">Ubuntu</option>
+        <option value="bash">Bash Terminal</option>
+        <option value="apple2">Apple II</option>
+        <option value="lotr">Lord of the Rings</option>
+        <option value="space">Space Theme</option>
+        <option value="wingdings">Wingdings '90s</option>
+        <option value="pink">Pink Cupcakes</option>
+      </select>
+      <div class="badge" id="secureContextBadge" aria-live="polite"></div>
+    </div>
+  </header>
+
+  <main class="grid">
+    <section class="card" aria-labelledby="controlsTitle">
+      <h2 id="controlsTitle">Controls</h2>
+
+      <div class="row">
+        <button id="toggleBtn" class="btn btn-primary" type="button">Start</button>
+        <button id="panicBtn" class="btn" type="button" title="Immediately stop audio">Panic</button>
+      </div>
+
+      <div class="kv">
+        <div class="k">Status</div>
+        <div class="v" id="statusText">Idle</div>
+        <div class="k">Engine</div>
+        <div class="v" id="engineText">Not initialized</div>
+        <div class="k">Sample rate</div>
+        <div class="v" id="sampleRateText">—</div>
+      </div>
+
+      <div class="control">
+        <label for="sound">Sound <span class="hint" id="soundVal">Brown noise</span></label>
+        <select id="sound">
+          <optgroup label="Noise">
+            <option value="brown" selected>Brown noise</option>
+            <option value="pink">Pink noise</option>
+            <option value="white">White noise</option>
+          </optgroup>
+          <optgroup label="Presets">
+            <option value="ocean">Ocean (modulated brown)</option>
+            <option value="rain">Rain (filtered white)</option>
+            <option value="wind">Wind (modulated brown)</option>
+            <option value="faucet">Faucet drips (filtered white)</option>
+            <option value="waterStream">Water Stream (modulated white)</option>
+            <option value="trance">Trance demo (original)</option>
+            <option value="dwarven">Dwarven Bridge (original cinematic)</option>
+            <option value="synthwave">Synthwave Night Drive (original)</option>
+            <option value="mongolian">Mongolian Throat (original)</option>
+            <option value="sovietwave">Sovietwave Memory Tapes (original)</option>
+            <option value="sovietRadio">Soviet Radio (original sovietwave)</option>
+            <option value="redSquare">Red Square Nights (original sovietwave)</option>
+            <option value="factoryFloors">Factory Floors (original sovietwave)</option>
+            <option value="glasnostDreams">Glasnost Dreams (original sovietwave)</option>
+            <option value="probabilityGarden">Probability Garden (Claude-inspired)</option>
+            <option value="aurora">Aurora Drift (original)</option>
+            <option value="nebula">Nebula Nights (original)</option>
+            <option value="electric">Electric Reverie (original)</option>
+            <option value="neon">Neon Pulse (original)</option>
+            <option value="celestial">Celestial Garden (original ambient)</option>
+            <option value="forest">Deep Forest (original ambient)</option>
+            <option value="crystalline">Crystalline Cavern (original ambient)</option>
+            <option value="mirage">Desert Mirage (original ambient)</option>
+            <option value="morningMist">Morning Mist (original ambient)</option>
+            <option value="underwater">Underwater Dream (original ambient)</option>
+          </optgroup>
+          <optgroup label="Tones">
+            <option value="sine">Sine tone</option>
+            <option value="triangle">Triangle tone</option>
+            <option value="square">Square tone</option>
+            <option value="sawtooth">Sawtooth tone</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div class="control hidden" id="freqControl">
+        <label for="frequency">Frequency <span class="hint" id="frequencyVal">220 Hz</span></label>
+        <input id="frequency" type="range" min="20" max="2000" step="1" value="220" />
+        <div class="muted">Tone-only control.</div>
+      </div>
+
+      <div class="control hidden" id="bpmControl">
+        <label for="bpm">BPM <span class="hint" id="bpmVal">136</span></label>
+        <input id="bpm" type="range" min="90" max="180" step="1" value="136" />
+        <div class="muted">Demo-only control.</div>
+      </div>
+
+      <div class="control hidden" id="loopControl">
+        <label class="check" for="loopSong">
+          <span>Loop song</span>
+          <input id="loopSong" type="checkbox" checked />
+        </label>
+        <div class="muted">If off, it plays once and stops.</div>
+      </div>
+
+      <div class="control hidden" id="melodyControl">
+        <label for="melody">Melody <span class="hint" id="melodyVal">60%</span></label>
+        <input id="melody" type="range" min="0" max="100" value="60" />
+        <div class="muted">Demo-only control.</div>
+      </div>
+
+      <div class="control">
+        <label for="volume">Volume <span class="hint" id="volumeVal">50%</span></label>
+        <input id="volume" type="range" min="0" max="100" value="50" />
+      </div>
+
+      <div class="control">
+        <label for="masterVolume">Master Volume <span class="hint" id="masterVolumeVal">80%</span></label>
+        <input id="masterVolume" type="range" min="0" max="100" value="80" />
+        <div class="muted">Overall output level.</div>
+      </div>
+
+      <div class="control">
+        <label>
+          <input type="checkbox" id="brownNoiseEnable" />
+          Brown Noise Mix <span class="hint" id="brownNoiseMixVal">0%</span>
+        </label>
+        <input id="brownNoiseMix" type="range" min="0" max="100" value="0" />
+        <div class="muted">Blend brown noise with current sound.</div>
+      </div>
+
+      <div class="control">
+        <label for="cutoff">Filter cutoff <span class="hint" id="cutoffVal">12,000 Hz</span></label>
+        <input id="cutoff" type="range" min="40" max="20000" step="1" value="12000" />
+        <div class="muted" id="filterHint">Tip: lowering cutoff makes it "darker".</div>
+      </div>
+
+      <details class="details">
+        <summary>Notes</summary>
+        <ul class="notes">
+          <li>Audio starts only after a user click (browser policy).</li>
+          <li>AudioWorklet usually requires a secure context (https/localhost). A fallback is included.</li>
+        </ul>
+      </details>
+    </section>
+
+    <section class="card" aria-labelledby="vizTitle">
+      <div class="row row-space">
+        <h2 id="vizTitle">Visualizer</h2>
+        <div class="row">
+          <select id="vizMode" title="Visualizer mode">
+            <option value="waveform" selected>Waveform</option>
+            <option value="spectrum">Spectrum</option>
+            <option value="bars">Bars</option>
+            <option value="kaleidoscope">Kaleidoscope</option>
+            <option value="particles">Particles</option>
+            <option value="sauron">Eye of Sauron</option>
+            <option value="rings">Rings</option>
+            <option value="nyan">Nyan Cat</option>
+          </select>
+          <div class="pill" id="levelText" aria-live="polite">Level: —</div>
+        </div>
+      </div>
+      <canvas id="scope" width="900" height="320" aria-label="Audio visualizer"></canvas>
+      <p class="muted" id="vizHint">Waveform (time-domain). This is a simple monitor, not a calibration tool.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span class="muted">Built with HTML/CSS/vanilla JS. No external libraries.</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
