@@ -257,14 +257,22 @@
 * { box-sizing: border-box; }
 
 html, body {
-  height: 100%;
-  margin: 0;
-  background: radial-gradient(1200px 600px at 20% 0%, var(--gradient1), transparent 60%),
+  /* height: 100%;
+  margin: 0; */
+  /* background: radial-gradient(1200px 600px at 20% 0%, var(--gradient1), transparent 60%),
               radial-gradient(900px 500px at 80% 10%, var(--gradient2), transparent 55%),
-              var(--bg);
+              var(--bg); */
   color: var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Liberation Sans", sans-serif;
   transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Dark mode - deep gradient with subtle overlays */
+[data-theme="dark"] body,
+[data-theme="dark"] html {
+  background: radial-gradient(1200px 600px at 20% 0%, var(--gradient1), transparent 60%),
+              radial-gradient(900px 500px at 80% 10%, var(--gradient2), transparent 55%),
+              var(--bg);
 }
 
 /* Light mode - clean paper with subtle texture */
@@ -324,6 +332,23 @@ html, body {
     radial-gradient(ellipse at 20% 20%, rgba(233,84,32,0.15), transparent 50%),
     radial-gradient(ellipse at 80% 80%, rgba(119,33,111,0.12), transparent 50%),
     linear-gradient(135deg, #300a24, #2d0922, #1c0615);
+}
+
+/* Windows 3.1 mode - pixelated pattern */
+[data-theme="win31"] body,
+[data-theme="win31"] html {
+  background:
+    repeating-linear-gradient(90deg, transparent 0px, rgba(0,0,0,0.05) 1px, transparent 2px, transparent 20px),
+    repeating-linear-gradient(0deg, transparent 0px, rgba(0,0,0,0.05) 1px, transparent 2px, transparent 20px),
+    linear-gradient(135deg, #008080 0%, #006666 100%);
+}
+
+/* Windows 95 mode - subtle noise texture */
+[data-theme="win95"] body,
+[data-theme="win95"] html {
+  background: radial-gradient(1200px 600px at 20% 0%, var(--gradient1), transparent 60%),
+              radial-gradient(900px 500px at 80% 10%, var(--gradient2), transparent 55%),
+              var(--bg);
 }
 
 /* Bash mode - matrix-style falling code effect */
@@ -533,6 +558,9 @@ html, body {
 
 /* Claude theme - Terminal-style header with thinking indicator */
 [data-theme="claude"] .header {
+  max-width: 100%;
+  margin: 0;
+  padding: 16px 24px;
   border: 4px double rgba(125, 211, 252, 0.5);
   border-radius: 0;
   background:
@@ -558,7 +586,7 @@ html, body {
     0 15px 40px rgba(0, 0, 0, 0.7);
   position: relative;
   overflow: visible;
-  margin: 40px 0 20px 0;
+  margin: 0 0 20px 0;
   padding: 30px 20px;
   max-width: 100%;
   clip-path: polygon(
@@ -1019,7 +1047,20 @@ h2 {
 @media (min-width: 920px) {
   .grid {
     grid-template-columns: 420px 1fr;
+    grid-template-rows: auto auto;
     align-items: start;
+  }
+  .controls-section {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+  .viz-section {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .eq-section {
+    grid-column: 2;
+    grid-row: 2;
   }
 }
 
@@ -1609,7 +1650,7 @@ h2 {
     inset 4px 4px 0 rgba(125, 211, 252, 0.1),
     inset -4px -4px 0 rgba(0, 0, 0, 0.3);
   position: relative;
-  margin: 30px 0;
+  margin: 0 0;
   padding: 30px 20px 20px 20px;
 }
 
@@ -3366,15 +3407,17 @@ label {
 }
 
 [data-theme="win31"] .header {
-  background: var(--card);
+  background: var(--accent);
   border-top: 2px solid #ffffff;
   border-left: 2px solid #ffffff;
   border-right: 2px solid #000000;
   border-bottom: 2px solid #000000;
-  padding: 12px;
+  padding: 8px 12px;
   margin-bottom: 8px;
   max-width: 100%;
   margin: 0;
+  text-align: center;
+  font-weight: 700;
 }
 
 [data-theme="win31"] .card {
@@ -3495,6 +3538,29 @@ label {
   font-weight: 700;
   font-size: 11px;
   text-transform: none;
+}
+
+[data-theme="win31"] input[type="text"],
+[data-theme="win31"] textarea {
+  border-radius: 0;
+  background: #ffffff;
+  border: 2px inset #808080;
+  font-family: "MS Sans Serif", Tahoma, sans-serif;
+  font-size: 11px;
+  color: #000000;
+  padding: 2px 4px;
+}
+
+[data-theme="win31"] input[type="checkbox"] {
+  width: 13px;
+  height: 13px;
+  border: 2px solid #808080;
+  background: #ffffff;
+}
+
+[data-theme="win31"] .muted {
+  color: #808080;
+  font-size: 11px;
 }
 
 .hint {
@@ -4197,12 +4263,19 @@ canvas {
 
 [data-theme="win95"] .header {
   background: linear-gradient(90deg, #000080, #1084d0);
-  border: none;
+  border-top: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+  border-right: 2px solid #000000;
+  border-bottom: 2px solid #000000;
   padding: 8px 12px;
   margin-bottom: 12px;
   max-width: 100%;
   margin: 0;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.3);
+  box-shadow: 
+    inset 1px 1px 0 rgba(255,255,255,0.5),
+    inset -1px -1px 0 rgba(0,0,0,0.5),
+    inset 2px 2px 0 rgba(255,255,255,0.2),
+    inset -2px -2px 0 rgba(0,0,0,0.3);
 }
 
 [data-theme="win95"] .header h1,
@@ -4213,13 +4286,31 @@ canvas {
 
 [data-theme="win95"] .card {
   background: var(--card);
-  border-top: 2px solid #ffffff;
-  border-left: 2px solid #ffffff;
+  border-top: 2px solid #dfdfdf;
+  border-left: 2px solid #dfdfdf;
   border-right: 2px solid #404040;
   border-bottom: 2px solid #404040;
   border-radius: 0;
   box-shadow: none;
-  padding: 12px;
+  padding: 2px;
+}
+
+[data-theme="win95"] .card h2 {
+  background: linear-gradient(90deg, #000080, #1084d0);
+  color: #ffffff;
+  margin: -2px -2px 10px -2px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  border-bottom: none;
+}
+
+[data-theme="win95"] .card > *:not(h2) {
+  padding: 0 10px;
+}
+
+[data-theme="win95"] .card > *:last-child {
+  padding-bottom: 10px;
 }
 
 [data-theme="win95"] .card::before {
@@ -4290,6 +4381,52 @@ canvas {
   font-size: 11px;
 }
 
+[data-theme="win95"] input[type="text"],
+[data-theme="win95"] textarea {
+  border-radius: 0;
+  background: #ffffff;
+  border-top: 2px solid #808080;
+  border-left: 2px solid #808080;
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  font-family: "MS Sans Serif", Tahoma, sans-serif;
+  font-size: 11px;
+  color: #000000;
+  padding: 3px 4px;
+  box-shadow: inset 1px 1px 0 #000000, inset -1px -1px 0 #dfdfdf;
+}
+
+[data-theme="win95"] input[type="checkbox"] {
+  width: 13px;
+  height: 13px;
+  border-top: 2px solid #808080;
+  border-left: 2px solid #808080;
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  background: #ffffff;
+  box-shadow: inset 1px 1px 0 #000000;
+}
+
+[data-theme="win95"] .control,
+[data-theme="win95"] fieldset {
+  border: 2px groove #c0c0c0;
+  padding: 8px;
+  background: var(--card);
+  margin: 8px 0;
+}
+
+[data-theme="win95"] .control legend,
+[data-theme="win95"] fieldset legend {
+  font-weight: 700;
+  font-size: 11px;
+  padding: 0 4px;
+}
+
+[data-theme="win95"] .muted {
+  color: #808080;
+  font-size: 11px;
+}
+
 [data-theme="win95"] input[type="range"] {
   height: 18px;
   border-radius: 0;
@@ -4338,18 +4475,47 @@ canvas {
 [data-theme="win95"] .pill,
 [data-theme="win95"] .badge {
   border-radius: 0;
-  border-top: 2px solid #ffffff;
-  border-left: 2px solid #ffffff;
-  border-right: 2px solid #808080;
-  border-bottom: 2px solid #808080;
+  border-top: 1px solid #808080;
+  border-left: 1px solid #808080;
+  border-right: 1px solid #ffffff;
+  border-bottom: 1px solid #ffffff;
   background: var(--card);
   font-size: 11px;
+  box-shadow: inset 1px 1px 0 #000000;
+  padding: 2px 6px;
 }
 
 [data-theme="win95"] label {
   font-weight: 400;
   font-size: 11px;
   text-transform: none;
+}
+
+[data-theme="win95"] input[type="text"],
+[data-theme="win95"] textarea {
+  border-radius: 0;
+  background: #ffffff;
+  border-top: 1px solid #808080;
+  border-left: 1px solid #808080;
+  border-right: 1px solid #ffffff;
+  border-bottom: 1px solid #ffffff;
+  font-family: "MS Sans Serif", Tahoma, sans-serif;
+  font-size: 11px;
+  color: #000000;
+  padding: 2px 4px;
+  box-shadow: inset 1px 1px 0 #000000;
+}
+
+[data-theme="win95"] input[type="checkbox"] {
+  width: 13px;
+  height: 13px;
+  border: 1px solid #808080;
+  background: #ffffff;
+}
+
+[data-theme="win95"] .muted {
+  color: #808080;
+  font-size: 11px;
 }
 
 [data-theme="win95"] .check {
@@ -6114,4 +6280,1470 @@ canvas {
   max-width: 1100px;
   margin: 0 auto 24px;
   padding: 0 18px;
+}
+
+/* Small button styling for favorites */
+.small-btn {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: transform 100ms ease, background 100ms ease;
+  flex: 1;
+}
+
+.small-btn:hover {
+  background: rgba(255,255,255,0.08);
+  transform: translateY(-1px);
+}
+
+.small-btn:active {
+  transform: translateY(0px);
+}
+
+.small-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================
+   HATSUNE MIKU THEME - Cyber/Digital Aesthetic
+   ============================================ */
+
+/* Theme color variables - defines the color palette for all Miku theme elements */
+[data-theme="miku"] {
+  --bg: #373b3e;              /* Background color for body/main areas */
+  --card: #434749;            /* Card background color */
+  --card2: #3d4245;           /* Secondary card color for alternates */
+  --text: #bec8d1;            /* Primary text color */
+  --muted: #86939e;           /* Muted/secondary text color */
+  --border: rgba(134,206,203,0.3);  /* Border color with transparency */
+  --accent: #86cecb;          /* Primary accent color (teal) */
+  --accent2: #137a7f;         /* Secondary accent color (darker teal) */
+  --danger: #e12885;          /* Danger/highlight color (pink) */
+  --shadow: 0 8px 32px rgba(0,0,0,0.5);  /* Drop shadow definition */
+}
+
+/* BODY BACKGROUND - Custom background for Miku theme
+   Completely replaces default background with Miku-specific gradients */
+html[data-theme="miku"], 
+html[data-theme="miku"] body {
+  background: radial-gradient(2400px 1200px at 20% 0%, var(--gradient1), transparent 60%),
+              radial-gradient(900px 500px at 80% 10%, var(--gradient2), transparent 55%),
+              var(--bg);
+}
+
+/* LAYER 1 - Hatsune Miku character image overlay
+   This creates a fixed-position image of Hatsune Miku on the left side of the screen
+   Z-INDEX: 1 (sits above body background but below most content)
+   - Fixed position means it doesn't scroll with page content
+   - Pointer-events: none allows clicking through the image to content below
+   - Vertically centered with transform: translateY(-50%) */
+[data-theme="miku"]::before {
+  content: '';
+  position: fixed;           /* Fixed to viewport, doesn't scroll */
+  left: 0;                   /* Anchored to left edge */
+  top: 50%;                  /* Start at vertical center */
+  transform: translateY(-50%); /* Offset by half height to truly center */
+  width: 400px;              /* Image width */
+  height: 100vh;             /* Full viewport height */
+  max-height: 800px;         /* Cap maximum height */
+  background: url('img/hmiku.png') left center / contain no-repeat;
+  pointer-events: none;      /* Allow clicking through the image */
+  z-index: 1;                /* LAYER 1: Above body background, below content */
+  opacity: 0.9;              /* Slightly transparent */
+}
+
+/* LAYER 2 - Animated holographic scanline effect
+   Creates a moving horizontal line that scans down the screen repeatedly
+   Z-INDEX: 9999 (sits on top of everything for visual effect)
+   - Animates from top to bottom continuously
+   - Acts as a decorative overlay that doesn't block interaction */
+[data-theme="miku"]::after {
+  content: '';
+  position: fixed;           /* Fixed to viewport, doesn't scroll */
+  left: 0;                   /* Full width from left */
+  top: 0;                    /* Starting position (animated) */
+  right: 0;                  /* Full width to right */
+  height: 3px;               /* Thin horizontal line */
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  box-shadow: 0 0 20px var(--accent);  /* Glowing effect */
+  animation: miku-scanline 4s linear infinite;  /* Continuous top-to-bottom animation */
+  pointer-events: none;      /* Allow clicking through the scanline */
+  z-index: 9999;             /* LAYER 2: On top of everything for visual effect */
+  opacity: 0.6;              /* Semi-transparent glow */
+}
+
+/* ANIMATION: Scanline moves from top (0%) to bottom (100%) of viewport */
+@keyframes miku-scanline {
+  0% { top: 0%; }
+  100% { top: 100%; }
+}
+
+/* ANIMATION: Gentle pulsing effect for elements (opacity and scale changes) */
+@keyframes miku-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.02); }
+}
+
+/* ANIMATION: Horizontal shimmer effect by moving background gradient position */
+@keyframes miku-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* ANIMATION: Pulsing glow/shadow effect using drop-shadow filter */
+@keyframes miku-glow {
+  0%, 100% { filter: drop-shadow(0 0 5px var(--accent)) drop-shadow(0 0 10px var(--accent)); }
+  50% { filter: drop-shadow(0 0 10px var(--accent)) drop-shadow(0 0 20px var(--accent)); }
+}
+
+/* HEADER STYLING - Main title/logo area at top of page
+   Uses multiple layered backgrounds for texture and visual interest
+   Z-INDEX: Default (auto) - normal document flow, above body background
+   - Diagonal grid patterns layered over gradient
+   - Angular clip-path cuts off top-right corner for tech aesthetic */
+[data-theme="miku"] .header {
+  /* Multiple background layers (listed bottom to top):
+     1. Solid color base (#373b3e)
+     2. Radial gradient glow effect
+     3. Diagonal stripe pattern (45deg pink tint)
+     4. Diagonal stripe pattern (135deg teal tint) */
+  background:
+    linear-gradient(135deg, transparent 25%, rgba(134,206,203,0.05) 25%, rgba(134,206,203,0.05) 50%, transparent 50%, transparent 75%, rgba(134,206,203,0.05) 75%),
+    linear-gradient(45deg, transparent 25%, rgba(225,40,133,0.03) 25%, rgba(225,40,133,0.03) 50%, transparent 50%, transparent 75%, rgba(225,40,133,0.03) 75%),
+    radial-gradient(circle at 30% 50%, rgba(134,206,203,0.15), transparent 50%),
+    #373b3e;
+  background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100%;
+  border: none;
+  border-left: 4px solid var(--accent);   /* Teal accent on left edge */
+  border-right: 4px solid var(--danger);  /* Pink accent on right edge */
+  border-radius: 0;                       /* Sharp corners for tech look */
+  box-shadow: 
+    inset 0 0 50px rgba(134,206,203,0.1),  /* Inner glow */
+    0 4px 20px rgba(0,0,0,0.4);            /* Drop shadow */
+  position: relative;                      /* Allows ::before and ::after pseudo-elements */
+  padding: 32px 48px;
+  /* Angular clip-path cuts off top-right corner (40px cutoff) */
+  clip-path: polygon(
+    0 0, 
+    calc(100% - 40px) 0, 
+    100% 40px, 
+    100% 100%, 
+    0 100%
+  );
+  animation: miku-pulse 6s ease-in-out infinite;  /* Gentle breathing animation */
+  z-index: 99999;
+}
+
+/* HEADER DECORATION - Pink triangle in top-right corner
+   Z-INDEX: Inherits from parent (.header), relative positioning within header
+   Creates a diagonal pink accent in the cut-off corner */
+[data-theme="miku"] .header::before {
+  content: '';
+  position: absolute;        /* Positioned relative to .header */
+  top: 0;
+  right: 0;
+  width: 100px;
+  height: 100px;
+  background: 
+    linear-gradient(135deg, var(--danger) 0%, transparent 50%);
+  clip-path: polygon(100% 0, 100% 100%, 0 0);  /* Triangle shape */
+  opacity: 0.4;
+}
+
+/* HEADER DECORATION - Binary code text in bottom-right
+   Z-INDEX: Inherits from parent (.header), positioned within header
+   Adds subtle tech/digital aesthetic detail */
+[data-theme="miku"] .header::after {
+  content: '01011001';       /* Binary number decoration */
+  position: absolute;        /* Positioned relative to .header */
+  bottom: 8px;
+  right: 12px;
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  opacity: 0.3;
+  letter-spacing: 2px;
+}
+
+/* HEADER TITLE (h1) - Main application title
+   Animated gradient text with shimmer effect */
+[data-theme="miku"] .header h1 {
+  font-family: 'Impact', 'Arial Black', sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  /* Gradient text effect using background-clip */
+  background: linear-gradient(90deg, var(--text), var(--accent), var(--text));
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 10px rgba(134,206,203,0.5));
+  animation: miku-shimmer 3s linear infinite;  /* Moving gradient animation */
+}
+
+/* HEADER SUBTITLE - Small text below title */
+[data-theme="miku"] .sub {
+  color: var(--danger);      /* Pink color */
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 4px;
+  opacity: 0.9;
+}
+
+[data-theme="miku"] .card {
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(134,206,203,0.02) 2px, rgba(134,206,203,0.02) 4px),
+    linear-gradient(180deg, rgba(67,71,73,0.95), rgba(55,59,62,0.95));
+  border: 2px solid transparent;
+  border-image: linear-gradient(135deg, var(--accent), var(--danger), var(--accent)) 1;
+  border-radius: 0;
+  box-shadow: 
+    0 8px 32px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(134,206,203,0.1);
+  position: relative;
+  clip-path: polygon(
+    0 0,
+    calc(100% - 20px) 0,
+    100% 20px,
+    100% 100%,
+    20px 100%,
+    0 calc(100% - 20px)
+  );
+  z-index: 99999;
+}
+
+[data-theme="miku"] .card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  background: var(--danger);
+  opacity: 0.6;
+  clip-path: polygon(100% 0, 100% 100%, 0 0);
+}
+
+[data-theme="miku"] .btn {
+  background: 
+    linear-gradient(45deg, rgba(134,206,203,0.1), rgba(19,122,127,0.2)),
+    rgba(67,71,73,0.8);
+  border: 2px solid var(--accent);
+  border-radius: 0;
+  color: var(--text);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 13px;
+  box-shadow: 
+    0 0 20px rgba(134,206,203,0.3),
+    inset 0 1px 0 rgba(190,200,209,0.1);
+  position: relative;
+  overflow: hidden;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  transition: all 0.3s ease;
+}
+
+[data-theme="miku"] .btn::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(134,206,203,0.3), transparent);
+  transform: rotate(45deg);
+  animation: miku-shimmer 3s linear infinite;
+}
+
+[data-theme="miku"] .btn::after {
+  content: '›';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--danger);
+  font-size: 18px;
+  font-weight: bold;
+  transition: transform 0.3s ease;
+}
+
+[data-theme="miku"] .btn:hover {
+  background: 
+    linear-gradient(45deg, rgba(134,206,203,0.2), rgba(19,122,127,0.3)),
+    rgba(77,82,84,0.9);
+  box-shadow: 
+    0 0 30px rgba(134,206,203,0.6),
+    inset 0 1px 0 rgba(190,200,209,0.2);
+  transform: translateX(4px);
+  border-color: var(--danger);
+}
+
+[data-theme="miku"] .btn:hover::after {
+  transform: translateY(-50%) translateX(4px);
+}
+
+[data-theme="miku"] .btn-primary {
+  background: 
+    linear-gradient(45deg, rgba(225,40,133,0.2), rgba(225,40,133,0.3)),
+    rgba(77,82,84,0.8);
+  border-color: var(--danger);
+  box-shadow: 
+    0 0 20px rgba(225,40,133,0.4),
+    inset 0 1px 0 rgba(190,200,209,0.1);
+}
+
+[data-theme="miku"] .btn-primary:hover {
+  background: 
+    linear-gradient(45deg, rgba(225,40,133,0.3), rgba(225,40,133,0.4)),
+    rgba(77,82,84,0.9);
+  box-shadow: 
+    0 0 30px rgba(225,40,133,0.7),
+    inset 0 1px 0 rgba(190,200,209,0.2);
+}
+
+[data-theme="miku"] canvas {
+  background: 
+    repeating-linear-gradient(0deg, transparent 0px, rgba(134,206,203,0.02) 1px, transparent 2px, transparent 20px),
+    linear-gradient(180deg, #2a2e30, #373b3e);
+  border: none;
+  border-left: 3px solid var(--accent);
+  border-right: 3px solid var(--danger);
+  border-radius: 0;
+  box-shadow:
+    0 4px 20px rgba(0,0,0,0.6),
+    inset 0 0 50px rgba(134,206,203,0.05);
+}
+
+[data-theme="miku"] .kv {
+  background: rgba(55,59,62,0.8);
+  border: 1px solid rgba(134,206,203,0.2);
+  border-left: 3px solid var(--accent);
+  border-radius: 0;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+  padding: 16px;
+  position: relative;
+}
+
+[data-theme="miku"] .kv::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--accent), var(--danger));
+  opacity: 0.5;
+}
+
+[data-theme="miku"] .k {
+  color: var(--accent);
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 2px;
+  font-family: 'Courier New', monospace;
+}
+
+[data-theme="miku"] .k::before {
+  content: '// ';
+  color: var(--muted);
+  opacity: 0.5;
+}
+
+[data-theme="miku"] .v {
+  color: var(--text);
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 0 10px rgba(134,206,203,0.3);
+}
+
+[data-theme="miku"] .pill,
+[data-theme="miku"] .badge {
+  background: linear-gradient(135deg, rgba(67,71,73,0.9), rgba(55,59,62,0.9));
+  border: 1px solid var(--accent);
+  border-radius: 0;
+  color: var(--text);
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  box-shadow: 0 0 15px rgba(134,206,203,0.3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 6px 14px;
+}
+
+[data-theme="miku"] select {
+  background: rgba(55,59,62,0.9);
+  border: 2px solid rgba(134,206,203,0.3);
+  border-radius: 0;
+  color: var(--text);
+  font-weight: 600;
+  font-family: 'Arial', sans-serif;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+}
+
+[data-theme="miku"] select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 20px rgba(134,206,203,0.5), inset 0 0 10px rgba(0,0,0,0.3);
+  outline: none;
+}
+
+[data-theme="miku"] input[type="range"] {
+  background: transparent;
+}
+
+[data-theme="miku"] input[type="range"]::-webkit-slider-track {
+  background: linear-gradient(90deg, var(--accent2), var(--accent), var(--danger));
+  border: 1px solid rgba(134,206,203,0.4);
+  height: 6px;
+  border-radius: 0;
+  box-shadow: 
+    inset 0 1px 3px rgba(0,0,0,0.4),
+    0 0 10px rgba(134,206,203,0.2);
+}
+
+[data-theme="miku"] input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, var(--accent), var(--danger));
+  border: 2px solid var(--text);
+  border-radius: 0;
+  cursor: pointer;
+  box-shadow: 0 0 15px rgba(134,206,203,0.8);
+  clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+}
+
+[data-theme="miku"] input[type="range"]::-moz-range-track {
+  background: linear-gradient(90deg, var(--accent2), var(--accent), var(--danger));
+  border: 1px solid rgba(134,206,203,0.4);
+  height: 6px;
+  border-radius: 0;
+  box-shadow: 
+    inset 0 1px 3px rgba(0,0,0,0.4),
+    0 0 10px rgba(134,206,203,0.2);
+}
+
+[data-theme="miku"] input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, var(--accent), var(--danger));
+  border: 2px solid var(--text);
+  border-radius: 0;
+  cursor: pointer;
+  box-shadow: 0 0 15px rgba(134,206,203,0.8);
+}
+
+[data-theme="miku"] label {
+  color: var(--text);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+}
+
+[data-theme="miku"] .hint {
+  color: var(--danger);
+  font-weight: 900;
+  text-shadow: 0 0 8px rgba(225,40,133,0.6);
+  font-family: 'Courier New', monospace;
+}
+
+[data-theme="miku"] .muted {
+  color: var(--muted);
+  font-style: normal;
+  opacity: 0.7;
+  font-size: 11px;
+}
+
+[data-theme="miku"] h2 {
+  color: var(--accent);
+  text-transform: uppercase;
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-shadow: 0 0 15px rgba(134,206,203,0.5);
+  border-left: 4px solid var(--danger);
+  padding-left: 12px;
+  font-size: 18px;
+}
+
+[data-theme="miku"] h2::before {
+  content: '';
+}
+
+[data-theme="miku"] h2::after {
+  content: '';
+}
+
+[data-theme="miku"] .check {
+  background: rgba(55,59,62,0.8);
+  border: 2px solid rgba(134,206,203,0.3);
+  border-radius: 0;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+  transition: all 0.3s ease;
+}
+
+[data-theme="miku"] .check:hover {
+  background: rgba(67,71,73,0.9);
+  border-color: var(--accent);
+  box-shadow: 0 0 15px rgba(134,206,203,0.4), inset 0 0 10px rgba(0,0,0,0.3);
+}
+
+/* ============================================
+   DRACULA THEME - 90's Goth Vampire Aesthetic
+   ============================================ */
+
+[data-theme="dracula"] {
+  --bg: #000000;              /* Pure black background */
+  --card: #0a0a0a;            /* Near-black cards */
+  --card2: #0f0f0f;           /* Slightly lighter alternate */
+  --text: #cccccc;            /* Light grey text */
+  --muted: #666666;           /* Grey muted text */
+  --border: rgba(100, 0, 0, 0.5);  /* Dark blood red borders */
+  --accent: #6b0000;          /* Dark blood red accent */
+  --accent2: #8b0000;         /* Brighter blood red */
+  --danger: #a00000;          /* Deep blood red danger */
+  --shadow: 0 20px 60px rgba(100, 0, 0, 0.6), 0 0 40px rgba(0, 0, 0, 0.9);
+  --gradient1: rgba(100, 0, 0, 0.15);      /* Subtle blood red gradient */
+  --gradient2: rgba(70, 0, 0, 0.12);       /* Darker blood gradient */
+}
+
+/* Gothic font styling for entire theme */
+html[data-theme="dracula"],
+html[data-theme="dracula"] body {
+  font-family: 'Old English Text MT', 'Blackletter', 'UnifrakturMaguntia', Georgia, serif;
+  background: radial-gradient(1800px 1000px at 30% 20%, var(--gradient1), transparent 80%),
+              radial-gradient(1200px 800px at 70% 60%, var(--gradient2), transparent 75%),
+              radial-gradient(circle at 50% 100%, rgba(100, 0, 0, 0.08), transparent 60%),
+              var(--bg);
+}
+
+/* Eerie blood-moon glow effect */
+[data-theme="dracula"]::before {
+  content: '🦇';
+  position: fixed;
+  top: 10%;
+  left: 15%;
+  font-size: 2rem;
+  opacity: 0.4;
+  animation: batFly1 20s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+  filter: drop-shadow(0 0 10px rgba(139, 0, 0, 0.6));
+}
+
+@keyframes batFly1 {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(200px, -50px) rotate(10deg); }
+  50% { transform: translate(400px, 30px) rotate(-10deg); }
+  75% { transform: translate(200px, 80px) rotate(5deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+@keyframes bloodMoonPulse {
+  0%, 100% { opacity: 0.2; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(1.1); }
+}
+
+/* Gothic shadow overlay */
+[data-theme="dracula"]::after {
+  content: '🦇';
+  position: fixed;
+  top: 20%;
+  right: 20%;
+  font-size: 1.5rem;
+  opacity: 0.3;
+  animation: batFly2 25s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+  filter: drop-shadow(0 0 8px rgba(139, 0, 0, 0.5));
+}
+
+@keyframes batFly2 {
+  0% { transform: translate(0, 0) rotate(0deg) scale(1); }
+  30% { transform: translate(-250px, 60px) rotate(-15deg) scale(1.2); }
+  60% { transform: translate(-400px, -40px) rotate(15deg) scale(0.9); }
+  90% { transform: translate(-150px, 70px) rotate(-5deg) scale(1.1); }
+  100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+}
+
+/* Additional flying bats */
+[data-theme="dracula"] body::before {
+  content: '🦇 🦇 🦇';
+  position: fixed;
+  top: 40%;
+  left: 50%;
+  font-size: 1rem;
+  opacity: 0.25;
+  letter-spacing: 2rem;
+  animation: batSwarm 30s linear infinite;
+  pointer-events: none;
+  z-index: 1;
+  filter: drop-shadow(0 0 5px rgba(139, 0, 0, 0.4));
+}
+
+@keyframes batSwarm {
+  0% { transform: translateX(-100vw) translateY(0); }
+  100% { transform: translateX(100vw) translateY(-50px); }
+}
+
+/* Blood moon glow */
+[data-theme="dracula"] body::after {
+  content: '';
+  position: fixed;
+  top: -10%;
+  right: 10%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(139, 0, 0, 0.3) 0%, rgba(100, 0, 0, 0.1) 50%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(40px);
+  pointer-events: none;
+  z-index: 0;
+  animation: bloodMoonPulse 8s ease-in-out infinite;
+}
+
+/* Header with blood drip effect */
+[data-theme="dracula"] .header {
+  background: linear-gradient(135deg, 
+    rgba(10, 10, 10, 0.98) 0%, 
+    rgba(15, 15, 15, 0.99) 100%);
+  border: 5px ridge var(--accent);
+  border-bottom: 8px groove var(--accent);
+  box-shadow: 0 4px 20px rgba(100, 0, 0, 0.5),
+              inset 0 -1px 0 rgba(107, 0, 0, 0.4),
+              0 8px 0 rgba(139, 0, 0, 0.3);
+}
+
+/* Crimson glow on header */
+[data-theme="dracula"] .header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent, 
+    var(--accent) 30%, 
+    var(--accent2) 70%, 
+    transparent);
+  opacity: 0.5;
+  animation: draculaGlow 3s ease-in-out infinite;
+}
+
+/* Blood dripping from header */
+[data-theme="dracula"] .header::after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    transparent 40px,
+    #8b0000 40px,
+    #8b0000 42px,
+    transparent 42px,
+    transparent 60px,
+    #a00000 60px,
+    #a00000 61px,
+    transparent 61px,
+    transparent 90px,
+    #6b0000 90px,
+    #6b0000 93px
+  );
+  mask-image: linear-gradient(to bottom, 
+    transparent 0%, 
+    rgba(0,0,0,0.8) 50%, 
+    transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, 
+    transparent 0%, 
+    rgba(0,0,0,0.8) 50%, 
+    transparent 100%);
+  pointer-events: none;
+  animation: bloodDrip 3s ease-in-out infinite;
+}
+
+@keyframes bloodDrip {
+  0%, 100% { transform: translateY(0); opacity: 0.6; }
+  50% { transform: translateY(5px); opacity: 0.9; }
+}
+
+@keyframes draculaGlow {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+/* Gothic title styling */
+[data-theme="dracula"] h1 {
+  font-family: 'Old English Text MT', 'Blackletter', 'UnifrakturMaguntia', Georgia, serif;
+  color: #cc0000;
+  text-shadow: 3px 3px 0 #000,
+               -1px -1px 0 #000,
+               1px -1px 0 #000,
+               -1px 1px 0 #000,
+               0 0 20px rgba(100, 0, 0, 0.8),
+               0 0 40px rgba(100, 0, 0, 0.6);
+  letter-spacing: 0.2em;
+  font-weight: 700;
+  filter: drop-shadow(0 0 10px rgba(139, 0, 0, 0.8));
+  position: relative;
+}
+
+[data-theme="dracula"] h1::before {
+  content: '☠ ';
+  color: #999;
+  font-size: 0.8em;
+  text-shadow: 2px 2px 0 #000, 0 0 10px rgba(255, 0, 0, 0.5);
+  animation: skullPulse 2s ease-in-out infinite;
+}
+
+[data-theme="dracula"] h1::after {
+  content: ' ☠';
+  color: #999;
+  font-size: 0.8em;
+  text-shadow: 2px 2px 0 #000, 0 0 10px rgba(255, 0, 0, 0.5);
+  animation: skullPulse 2s ease-in-out infinite reverse;
+}
+
+@keyframes skullPulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+[data-theme="dracula"] h2 {
+  font-family: 'Old English Text MT', 'Blackletter', 'UnifrakturMaguntia', Georgia, serif;
+  color: #999;
+  text-shadow: 2px 2px 0 #000,
+               -1px -1px 0 #000,
+               0 0 15px rgba(100, 0, 0, 0.6);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+/* Cards with blood-stained edges */
+[data-theme="dracula"] .card {
+  background: linear-gradient(145deg, 
+    rgba(10, 10, 10, 0.95) 0%, 
+    rgba(15, 15, 15, 0.98) 100%);
+  border: 4px ridge rgba(139, 0, 0, 0.8);
+  box-shadow: var(--shadow),
+              inset 0 0 20px rgba(100, 0, 0, 0.2),
+              inset 2px 2px 5px rgba(255, 255, 255, 0.05),
+              8px 8px 0 rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+/* Haunting glow effect on cards */
+[data-theme="dracula"] .card::before {
+  content: '💀';
+  position: absolute;
+  top: -15px;
+  right: 10px;
+  font-size: 1.5rem;
+  opacity: 0.3;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8),
+               0 0 10px rgba(139, 0, 0, 0.6);
+  animation: skullFloat 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes skullFloat {
+  0%, 100% { transform: translateY(0) rotate(-5deg); }
+  50% { transform: translateY(-5px) rotate(5deg); }
+}
+
+/* Blood drip accent on card hover */
+[data-theme="dracula"] .card:hover {
+  border-style: outset;
+  border-color: var(--accent2);
+  box-shadow: 0 8px 32px rgba(100, 0, 0, 0.8),
+              0 0 60px rgba(139, 0, 0, 0.6),
+              inset 0 0 30px rgba(100, 0, 0, 0.3),
+              10px 10px 0 rgba(139, 0, 0, 0.3);
+  transform: translate(-2px, -2px);
+}
+
+[data-theme="dracula"] .card:hover::before {
+  animation: skullFloat 0.5s ease-in-out infinite;
+}
+
+/* Blood drips on card corners */
+[data-theme="dracula"] .card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  width: 3px;
+  height: 30px;
+  background: linear-gradient(to bottom, 
+    #8b0000 0%, 
+    #6b0000 50%, 
+    transparent 100%);
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 1;
+  animation: cardBloodDrip 4s ease-in-out infinite;
+}
+
+@keyframes cardBloodDrip {
+  0%, 100% { height: 20px; opacity: 0.4; }
+  50% { height: 35px; opacity: 0.7; }
+}
+
+/* Crimson vampire buttons */
+[data-theme="dracula"] .btn {
+  background: linear-gradient(135deg, 
+    rgba(100, 0, 0, 0.4) 0%, 
+    rgba(70, 0, 0, 0.3) 100%);
+  border: 3px outset rgba(139, 0, 0, 0.8);
+  color: var(--text);
+  text-shadow: 2px 2px 0 #000,
+               -1px -1px 0 #000;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.8),
+              inset 1px 1px 2px rgba(255, 255, 255, 0.1);
+  transition: all 0.1s ease;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+}
+
+[data-theme="dracula"] .btn:hover {
+  background: linear-gradient(135deg, 
+    rgba(139, 0, 0, 0.6) 0%, 
+    rgba(100, 0, 0, 0.5) 100%);
+  border-style: inset;
+  border-color: var(--accent2);
+  box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.8),
+              0 0 20px rgba(139, 0, 0, 0.8);
+  transform: translate(1px, 1px);
+}
+
+[data-theme="dracula"] .btn-primary {
+  background: linear-gradient(180deg, 
+    var(--accent2) 0%, 
+    var(--accent) 50%,
+    #000 100%);
+  border: 4px outset var(--accent2);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.9),
+              0 0 30px rgba(139, 0, 0, 0.8),
+              inset 1px 1px 2px rgba(255, 255, 255, 0.2);
+  color: #fff;
+  text-shadow: 2px 2px 0 #000,
+               0 0 10px rgba(255, 0, 0, 0.8);
+}
+
+[data-theme="dracula"] .btn-primary:hover {
+  background: linear-gradient(180deg, 
+    #000 0%,
+    var(--accent) 50%, 
+    var(--accent2) 100%);
+  border-style: inset;
+  box-shadow: inset 2px 2px 6px rgba(0, 0, 0, 0.9),
+              0 0 40px rgba(139, 0, 0, 1);
+  transform: translate(2px, 2px);
+}
+
+/* Gothic inputs and selects */
+[data-theme="dracula"] input[type="range"] {
+  accent-color: var(--accent);
+}
+
+[data-theme="dracula"] select,
+[data-theme="dracula"] input {
+  background: rgba(10, 10, 10, 0.9);
+  border: 3px inset rgba(100, 0, 0, 0.6);
+  color: var(--text);
+  box-shadow: inset 2px 2px 8px rgba(0, 0, 0, 0.9),
+              inset -1px -1px 2px rgba(255, 255, 255, 0.05);
+  font-weight: bold;
+}
+
+[data-theme="dracula"] select:focus,
+[data-theme="dracula"] input:focus {
+  border-color: var(--accent2);
+  border-style: ridge;
+  box-shadow: 0 0 20px rgba(139, 0, 0, 0.8),
+              inset 2px 2px 8px rgba(0, 0, 0, 0.9);
+  outline: 2px solid rgba(139, 0, 0, 0.3);
+  outline-offset: 2px;
+}
+
+/* Eerie canvas glow */
+[data-theme="dracula"] canvas {
+  border: 5px groove rgba(139, 0, 0, 0.8);
+  box-shadow: 0 0 40px rgba(139, 0, 0, 0.6),
+              inset 0 0 30px rgba(0, 0, 0, 0.9),
+              inset 3px 3px 10px rgba(0, 0, 0, 0.8),
+              8px 8px 0 rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.9);
+}
+
+/* Blood-red status indicators */
+[data-theme="dracula"] .pill {
+  background: rgba(100, 0, 0, 0.5);
+  border: 2px outset rgba(139, 0, 0, 0.8);
+  color: var(--text);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.8),
+              inset 1px 1px 2px rgba(255, 255, 255, 0.1),
+              0 0 15px rgba(139, 0, 0, 0.6);
+  font-weight: bold;
+  text-shadow: 1px 1px 0 #000;
+}
+
+[data-theme="dracula"] .badge {
+  background: linear-gradient(135deg, 
+    rgba(139, 0, 0, 0.6), 
+    rgba(100, 0, 0, 0.5));
+  border: 2px ridge rgba(139, 0, 0, 0.9);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.8),
+              0 0 20px rgba(139, 0, 0, 0.7),
+              inset 1px 1px 2px rgba(255, 255, 255, 0.15);
+  font-weight: bold;
+  text-shadow: 1px 1px 0 #000;
+}
+
+/* Gothic checkbox styling */
+[data-theme="dracula"] .check {
+  background: rgba(10, 10, 10, 0.9);
+  border: 3px groove rgba(100, 0, 0, 0.8);
+  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.9),
+              3px 3px 0 rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dracula"] .check:hover {
+  background: rgba(15, 15, 15, 0.95);
+  border-style: ridge;
+  border-color: var(--accent2);
+  box-shadow: 0 0 25px rgba(139, 0, 0, 0.8),
+              inset 2px 2px 5px rgba(0, 0, 0, 0.9),
+              5px 5px 0 rgba(139, 0, 0, 0.4);
+}
+
+/* 16-Bit Pixel Art Theme - SNES/Sega Era */
+[data-theme="pixel"] {
+  --bg: #202850;
+  --card: #384870;
+  --accent: #ff3860;
+  --accent2: #3880ff;
+  --accent3: #ffb830;
+  --accent4: #38ff60;
+  --text: #f8f8f8;
+  --muted: #a8b8d8;
+  --border: #ff3860;
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  background: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(56, 128, 255, 0.03) 2px,
+      rgba(56, 128, 255, 0.03) 4px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 56, 96, 0.03) 2px,
+      rgba(255, 56, 96, 0.03) 4px
+    ),
+    radial-gradient(ellipse at center, #303860 0%, #202850 100%);
+  background-attachment: fixed;
+}
+
+[data-theme="pixel"]::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15) 0px,
+    transparent 1px,
+    transparent 2px,
+    rgba(0, 0, 0, 0.15) 3px
+  );
+  pointer-events: none;
+  z-index: 9999;
+  animation: scanlines 8s linear infinite;
+}
+
+@keyframes scanlines {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(4px); }
+}
+
+[data-theme="pixel"] h1 {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--accent);
+  text-shadow: 
+    3px 3px 0 #000,
+    4px 4px 0 var(--accent2);
+  letter-spacing: 3px;
+}
+
+[data-theme="pixel"] h1::before,
+[data-theme="pixel"] h1::after {
+  content: '◆';
+  color: var(--accent3);
+  margin: 0 12px;
+  text-shadow: 2px 2px 0 #000;
+  animation: coinSpin 2s linear infinite;
+}
+
+@keyframes coinSpin {
+  0%, 100% { transform: scaleX(1); }
+  50% { transform: scaleX(0.3); }
+}
+
+[data-theme="pixel"] h2 {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--text);
+  text-shadow: 2px 2px 0 #000;
+  letter-spacing: 2px;
+  border-bottom: 4px solid var(--accent);
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 56, 96, 0.15) 50%, 
+    transparent 100%);
+  position: relative;
+}
+
+[data-theme="pixel"] h2::before {
+  content: '♥';
+  color: var(--accent);
+  margin-right: 8px;
+  text-shadow: 2px 2px 0 #000;
+  animation: heartBeat 1.5s ease-in-out infinite;
+}
+
+@keyframes heartBeat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+[data-theme="pixel"] .header {
+  background: 
+    linear-gradient(180deg, 
+      rgba(255, 56, 96, 0.2) 0%, 
+      transparent 50%, 
+      rgba(56, 128, 255, 0.2) 100%),
+    var(--card);
+  border: 4px solid var(--accent);
+  border-radius: 0;
+  box-shadow: 
+    0 0 0 4px #000,
+    0 0 0 8px var(--accent2),
+    inset 0 0 20px rgba(56, 128, 255, 0.2),
+    0 8px 0 rgba(0, 0, 0, 0.5);
+  padding: 16px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="pixel"] .header::before {
+  content: '★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★';
+  position: absolute;
+  top: 4px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: var(--accent3);
+  font-size: 12px;
+  text-shadow: 1px 1px 0 #000;
+  opacity: 0.6;
+  animation: starTwinkle 3s ease-in-out infinite;
+}
+
+@keyframes starTwinkle {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.3; }
+}
+
+[data-theme="pixel"] .sub {
+  color: var(--muted);
+  text-shadow: 1px 1px 0 #000;
+  font-size: 12px;
+}
+
+/* Unique card styling - different border colors for variety */
+[data-theme="pixel"] .card {
+  background: 
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 10px,
+      rgba(56, 128, 255, 0.02) 10px,
+      rgba(56, 128, 255, 0.02) 20px
+    ),
+    var(--card);
+  border: 4px solid;
+  border-radius: 0;
+  box-shadow: 
+    0 0 0 2px #000,
+    6px 6px 0 rgba(0, 0, 0, 0.6),
+    inset 0 0 30px rgba(56, 128, 255, 0.1);
+  padding: 16px;
+  position: relative;
+}
+
+/* Each card gets a unique border color */
+[data-theme="pixel"] .card:nth-child(1) {
+  border-color: #ff3860;
+  box-shadow: 
+    0 0 0 2px #000,
+    6px 6px 0 rgba(0, 0, 0, 0.6),
+    0 0 15px rgba(255, 56, 96, 0.4),
+    inset 0 0 30px rgba(255, 56, 96, 0.1);
+}
+
+[data-theme="pixel"] .card:nth-child(2) {
+  border-color: #3880ff;
+  box-shadow: 
+    0 0 0 2px #000,
+    6px 6px 0 rgba(0, 0, 0, 0.6),
+    0 0 15px rgba(56, 128, 255, 0.4),
+    inset 0 0 30px rgba(56, 128, 255, 0.1);
+}
+
+[data-theme="pixel"] .card:nth-child(3) {
+  border-color: #ffb830;
+  box-shadow: 
+    0 0 0 2px #000,
+    6px 6px 0 rgba(0, 0, 0, 0.6),
+    0 0 15px rgba(255, 184, 48, 0.4),
+    inset 0 0 30px rgba(255, 184, 48, 0.1);
+}
+
+[data-theme="pixel"] .card:nth-child(4) {
+  border-color: #38ff60;
+  box-shadow: 
+    0 0 0 2px #000,
+    6px 6px 0 rgba(0, 0, 0, 0.6),
+    0 0 15px rgba(56, 255, 96, 0.4),
+    inset 0 0 30px rgba(56, 255, 96, 0.1);
+}
+
+[data-theme="pixel"] .card:nth-child(5) {
+  border-color: #ff8838;
+  box-shadow: 
+    0 0 0 2px #000,
+    6px 6px 0 rgba(0, 0, 0, 0.6),
+    0 0 15px rgba(255, 136, 56, 0.4),
+    inset 0 0 30px rgba(255, 136, 56, 0.1);
+}
+
+[data-theme="pixel"] .card:nth-child(6) {
+  border-color: #b838ff;
+  box-shadow: 
+    0 0 0 2px #000,
+    6px 6px 0 rgba(0, 0, 0, 0.6),
+    0 0 15px rgba(184, 56, 255, 0.4),
+    inset 0 0 30px rgba(184, 56, 255, 0.1);
+}
+
+[data-theme="pixel"] .card::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    currentColor 50%, 
+    transparent 100%);
+  opacity: 0.5;
+}
+
+[data-theme="pixel"] .card::after {
+  content: '▲';
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 10px;
+  color: currentColor;
+  opacity: 0.7;
+  text-shadow: 1px 1px 0 #000;
+}
+
+[data-theme="pixel"] .btn {
+  border: 4px solid var(--accent);
+  border-radius: 0;
+  background: var(--card);
+  color: var(--accent);
+  font-weight: 900;
+  padding: 12px 24px;
+  text-shadow: 2px 2px 0 #000;
+  box-shadow: 
+    0 0 0 2px #000,
+    4px 4px 0 rgba(0, 0, 0, 0.7),
+    inset 0 0 10px rgba(255, 56, 96, 0.2);
+  transition: all 0.05s;
+  letter-spacing: 2px;
+}
+
+[data-theme="pixel"] .btn:hover {
+  background: rgba(255, 56, 96, 0.2);
+  box-shadow: 
+    0 0 0 2px #000,
+    4px 4px 0 rgba(0, 0, 0, 0.7),
+    0 0 15px var(--accent),
+    inset 0 0 20px rgba(255, 56, 96, 0.3);
+  transform: translate(-2px, -2px);
+}
+
+[data-theme="pixel"] .btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 
+    0 0 0 2px #000,
+    2px 2px 0 rgba(0, 0, 0, 0.7),
+    inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="pixel"] .btn-primary {
+  border-color: var(--accent3);
+  color: var(--text);
+  background: linear-gradient(180deg, 
+    var(--accent3) 0%, 
+    #d89020 100%);
+  box-shadow: 
+    0 0 0 2px #000,
+    4px 4px 0 rgba(0, 0, 0, 0.7),
+    0 0 15px rgba(255, 184, 48, 0.5),
+    inset 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="pixel"] .btn-primary:hover {
+  background: linear-gradient(180deg, 
+    #ffd040 0%, 
+    var(--accent3) 100%);
+  box-shadow: 
+    0 0 0 2px #000,
+    4px 4px 0 rgba(0, 0, 0, 0.7),
+    0 0 20px rgba(255, 184, 48, 0.7),
+    inset 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+[data-theme="pixel"] select,
+[data-theme="pixel"] input[type="text"],
+[data-theme="pixel"] textarea {
+  border: 4px solid var(--accent2);
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.5);
+  color: var(--text);
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 8px;
+  box-shadow: 
+    0 0 0 2px #000,
+    inset 2px 2px 8px rgba(0, 0, 0, 0.8),
+    0 0 10px rgba(56, 128, 255, 0.3);
+}
+
+[data-theme="pixel"] select:focus,
+[data-theme="pixel"] input[type="text"]:focus,
+[data-theme="pixel"] textarea:focus {
+  outline: none;
+  box-shadow: 
+    0 0 0 2px #000,
+    inset 2px 2px 8px rgba(0, 0, 0, 0.8),
+    0 0 15px rgba(56, 128, 255, 0.6);
+}
+
+[data-theme="pixel"] input[type="range"] {
+  height: 24px;
+  border-radius: 0;
+  background: transparent;
+}
+
+[data-theme="pixel"] input[type="range"]::-webkit-slider-track {
+  height: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 3px solid var(--accent3);
+  border-radius: 0;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.9);
+}
+
+[data-theme="pixel"] input[type="range"]::-webkit-slider-thumb {
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, var(--accent3) 0%, #d89020 100%);
+  border: 3px solid #000;
+  border-radius: 0;
+  box-shadow: 
+    0 0 8px var(--accent3),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="pixel"] input[type="range"]::-moz-range-track {
+  height: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 3px solid var(--accent3);
+  border-radius: 0;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.9);
+}
+
+[data-theme="pixel"] input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, var(--accent3) 0%, #d89020 100%);
+  border: 3px solid #000;
+  border-radius: 0;
+  box-shadow: 
+    0 0 8px var(--accent3),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="pixel"] .kv {
+  border: 4px solid var(--accent2);
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.6);
+  box-shadow: 
+    0 0 0 2px #000,
+    inset 0 0 20px rgba(56, 128, 255, 0.2);
+}
+
+[data-theme="pixel"] .k {
+  color: var(--accent3);
+  font-weight: 900;
+  text-shadow: 2px 2px 0 #000;
+  border-right: 3px solid var(--accent2);
+  background: rgba(255, 184, 48, 0.1);
+}
+
+[data-theme="pixel"] .v {
+  color: var(--text);
+  font-weight: 700;
+  text-shadow: 1px 1px 0 #000;
+}
+
+[data-theme="pixel"] label {
+  color: var(--text);
+  font-weight: 900;
+  text-shadow: 1px 1px 0 #000;
+  letter-spacing: 1px;
+}
+
+[data-theme="pixel"] .hint,
+[data-theme="pixel"] .muted {
+  color: var(--muted);
+  text-shadow: 1px 1px 0 #000;
+  font-size: 12px;
+}
+
+[data-theme="pixel"] .badge {
+  border: 3px solid var(--accent4);
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.7);
+  color: var(--accent4);
+  font-weight: 900;
+  text-shadow: 2px 2px 0 #000;
+  box-shadow: 
+    0 0 0 2px #000,
+    0 0 12px var(--accent4),
+    inset 0 0 10px rgba(56, 255, 96, 0.3);
+  padding: 6px 12px;
+  letter-spacing: 1px;
+}
+
+[data-theme="pixel"] .pill {
+  border: 3px solid var(--accent);
+  border-radius: 0;
+  background: rgba(255, 56, 96, 0.2);
+  color: var(--accent);
+  font-weight: 900;
+  text-shadow: 2px 2px 0 #000;
+  box-shadow: 
+    0 0 0 2px #000,
+    0 0 8px var(--accent);
+  padding: 4px 10px;
+  letter-spacing: 1px;
+}
+
+[data-theme="pixel"] canvas {
+  border: 4px solid var(--accent2);
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.8);
+  box-shadow: 
+    0 0 0 2px #000,
+    inset 0 0 30px rgba(56, 128, 255, 0.2),
+    0 0 20px rgba(56, 128, 255, 0.3);
+}
+
+[data-theme="pixel"] input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--accent3);
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 0;
+  box-shadow: 
+    0 0 0 2px #000,
+    inset 0 0 10px rgba(0, 0, 0, 0.9);
+}
+
+[data-theme="pixel"] input[type="checkbox"]:checked {
+  background: var(--accent3);
+  box-shadow: 
+    0 0 0 2px #000,
+    0 0 12px var(--accent3),
+    inset 0 0 10px rgba(255, 184, 48, 0.5);
+}
+
+/* Pixel art power-up animation */
+@keyframes powerUp {
+  0%, 100% { 
+    filter: brightness(1); 
+  }
+  50% { 
+    filter: brightness(1.3); 
+  }
+}
+
+[data-theme="pixel"] .btn-primary {
+  animation: powerUp 2s ease-in-out infinite;
+}
+
+/* CRT glow effect */
+[data-theme="pixel"] .header h1 {
+  animation: crtGlow 3s ease-in-out infinite;
+}
+
+@keyframes crtGlow {
+  0%, 100% { 
+    text-shadow: 
+      3px 3px 0 #000,
+      4px 4px 0 var(--accent2);
+  }
+  50% { 
+    text-shadow: 
+      3px 3px 0 #000,
+      4px 4px 0 var(--accent2),
+      0 0 15px var(--accent);
+  }
 }

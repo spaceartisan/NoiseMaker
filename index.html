@@ -19,6 +19,7 @@
         <option value="cyber">Cyber Mode</option>
         <option value="neon">Neon Mode</option>
         <option value="gothic">Gothic Mode</option>
+        <option value="dracula">Dracula 🧛</option>
         <option value="claude">Claude Theme</option>
         <option value="chatgpt">ChatGPT Theme</option>
         <option value="cat">Cat Theme =^.^=</option>
@@ -34,18 +35,20 @@
         <option value="space">Space Theme</option>
         <option value="wingdings">Wingdings '90s</option>
         <option value="pink">Pink Cupcakes</option>
+        <option value="miku">Hatsune Miku</option>
+        <option value="pixel">16-Bit Pixel 🎮</option>
       </select>
       <div class="badge" id="secureContextBadge" aria-live="polite"></div>
     </div>
   </header>
 
   <main class="grid">
-    <section class="card" aria-labelledby="controlsTitle">
+    <section class="card controls-section" aria-labelledby="controlsTitle">
       <h2 id="controlsTitle">Controls</h2>
 
       <div class="row">
         <button id="toggleBtn" class="btn btn-primary" type="button">Start</button>
-        <button id="panicBtn" class="btn" type="button" title="Immediately stop audio">Panic</button>
+        <button id="panicBtn" class="btn" type="button" title="Immediately stop audio">Clear</button>
       </div>
 
       <div class="kv">
@@ -60,17 +63,44 @@
       <div class="control">
         <label for="sound">Sound <span class="hint" id="soundVal">Brown noise</span></label>
         <select id="sound">
-          <optgroup label="Noise">
+          <optgroup label="Core Noise">
             <option value="brown" selected>Brown noise</option>
             <option value="pink">Pink noise</option>
             <option value="white">White noise</option>
+            <option value="blue">Blue noise</option>
+            <option value="violet">Violet noise</option>
+            <option value="grey">Grey noise</option>
+            <option value="red">Red noise</option>
+          </optgroup>
+          <optgroup label="Cozy & Ambient">
+            <option value="deepBrown">Deep Brown (extra cozy)</option>
+            <option value="cozyBrown">Cozy Brown (warm)</option>
+            <option value="softPink">Soft Pink (gentle)</option>
+            <option value="crispWhite">Crisp White (bright)</option>
+            <option value="velvetBrown">Velvet Brown (smooth)</option>
+            <option value="warmPink">Warm Pink (comforting)</option>
+            <option value="gentleGrey">Gentle Grey (balanced)</option>
+          </optgroup>
+          <optgroup label="Nature Sounds">
+            <option value="ocean">Ocean waves</option>
+            <option value="rain">Rain</option>
+            <option value="wind">Wind</option>
+            <option value="thunder">Thunder storm</option>
+            <option value="forestNight">Forest at night</option>
+            <option value="caveAmbience">Cave ambience</option>
+            <option value="mountainWind">Mountain wind</option>
+            <option value="beachWaves">Beach waves</option>
+            <option value="cityRain">City rain</option>
+            <option value="riverFlow">River flow</option>
+          </optgroup>
+          <optgroup label="Water Sounds">
+            <option value="faucet">Faucet drips</option>
+            <option value="waterStream">Water stream</option>
+            <option value="shower">Shower</option>
+            <option value="fountain">Fountain</option>
+            <option value="underwaterDeep">Underwater (deep)</option>
           </optgroup>
           <optgroup label="Presets">
-            <option value="ocean">Ocean (modulated brown)</option>
-            <option value="rain">Rain (filtered white)</option>
-            <option value="wind">Wind (modulated brown)</option>
-            <option value="faucet">Faucet drips (filtered white)</option>
-            <option value="waterStream">Water Stream (modulated white)</option>
             <option value="trance">Trance demo (original)</option>
             <option value="dwarven">Dwarven Bridge (original cinematic)</option>
             <option value="synthwave">Synthwave Night Drive (original)</option>
@@ -101,6 +131,37 @@
         </select>
       </div>
 
+      <div class="control">
+        <label for="customSong">Custom Songs <span class="hint" id="songStatusText">No song selected</span></label>
+        <select id="customSong">
+          <option value="">None</option>
+        </select>
+        <div class="muted">Play custom melodies with adjustable tempo.</div>
+      </div>
+
+      <div class="control hidden" id="songBpmControl">
+        <label for="songBpm">Song BPM <span class="hint" id="songBpmVal">120</span></label>
+        <input id="songBpm" type="range" min="40" max="240" step="1" value="120" />
+        <div class="muted">Adjust playback speed of the current song.</div>
+      </div>
+
+      <div class="control">
+        <label for="favorites">Favorites</label>
+        <select id="favorites">
+          <option value="" disabled selected>No favorites yet</option>
+        </select>
+        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+          <button id="addFavoriteBtn" class="small-btn">Add Current ⭐</button>
+          <button id="removeFavoriteBtn" class="small-btn">Remove</button>
+        </div>
+      </div>
+
+      <div class="control">
+        <label for="smoothing">Audio Smoothing <span class="hint" id="smoothingVal">Off</span></label>
+        <input id="smoothing" type="range" min="0" max="100" value="0" step="1" />
+        <div class="muted">Softens harsh edges and high frequencies in the audio.</div>
+      </div>
+
       <div class="control hidden" id="freqControl">
         <label for="frequency">Frequency <span class="hint" id="frequencyVal">220 Hz</span></label>
         <input id="frequency" type="range" min="20" max="2000" step="1" value="220" />
@@ -110,7 +171,6 @@
       <div class="control hidden" id="bpmControl">
         <label for="bpm">BPM <span class="hint" id="bpmVal">136</span></label>
         <input id="bpm" type="range" min="90" max="180" step="1" value="136" />
-        <div class="muted">Demo-only control.</div>
       </div>
 
       <div class="control hidden" id="loopControl">
@@ -121,36 +181,29 @@
         <div class="muted">If off, it plays once and stops.</div>
       </div>
 
-      <div class="control hidden" id="melodyControl">
-        <label for="melody">Melody <span class="hint" id="melodyVal">60%</span></label>
-        <input id="melody" type="range" min="0" max="100" value="60" />
-        <div class="muted">Demo-only control.</div>
-      </div>
-
       <div class="control">
-        <label for="volume">Volume <span class="hint" id="volumeVal">50%</span></label>
+        <label for="volume">Sound Volume <span class="hint" id="volumeVal">50%</span></label>
         <input id="volume" type="range" min="0" max="100" value="50" />
+        <div class="muted">Controls the selected sound's volume.</div>
       </div>
 
       <div class="control">
         <label for="masterVolume">Master Volume <span class="hint" id="masterVolumeVal">80%</span></label>
         <input id="masterVolume" type="range" min="0" max="100" value="80" />
-        <div class="muted">Overall output level.</div>
+        <div class="muted">Final output level for all sounds combined.</div>
       </div>
 
       <div class="control">
         <label>
           <input type="checkbox" id="brownNoiseEnable" />
-          Brown Noise Mix <span class="hint" id="brownNoiseMixVal">0%</span>
+          Brown Noise Mix
         </label>
-        <input id="brownNoiseMix" type="range" min="0" max="100" value="0" />
         <div class="muted">Blend brown noise with current sound.</div>
       </div>
 
-      <div class="control">
-        <label for="cutoff">Filter cutoff <span class="hint" id="cutoffVal">12,000 Hz</span></label>
-        <input id="cutoff" type="range" min="40" max="20000" step="1" value="12000" />
-        <div class="muted" id="filterHint">Tip: lowering cutoff makes it "darker".</div>
+      <div class="control hidden" id="brownNoiseMixControl">
+        <label for="brownNoiseMix">Brown Noise Mix Level <span class="hint" id="brownNoiseMixVal">0%</span></label>
+        <input id="brownNoiseMix" type="range" min="0" max="100" value="0" />
       </div>
 
       <details class="details">
@@ -162,11 +215,12 @@
       </details>
     </section>
 
-    <section class="card" aria-labelledby="vizTitle">
+    <section class="card viz-section" aria-labelledby="vizTitle">
       <div class="row row-space">
         <h2 id="vizTitle">Visualizer</h2>
         <div class="row">
           <select id="vizMode" title="Visualizer mode">
+            <option value="none">None</option>
             <option value="waveform" selected>Waveform</option>
             <option value="spectrum">Spectrum</option>
             <option value="bars">Bars</option>
@@ -175,6 +229,12 @@
             <option value="sauron">Eye of Sauron</option>
             <option value="rings">Rings</option>
             <option value="nyan">Nyan Cat</option>
+            <option value="airplane">Airplane</option>
+            <option value="windows">Windows Startup</option>
+            <option value="stargate">Stargate</option>
+            <option value="hyperspace">Hyperspace</option>
+            <option value="blackhole">Black Hole</option>
+            <option value="wormhole">Wormhole</option>
           </select>
           <div class="pill" id="levelText" aria-live="polite">Level: —</div>
         </div>
@@ -182,12 +242,79 @@
       <canvas id="scope" width="900" height="320" aria-label="Audio visualizer"></canvas>
       <p class="muted" id="vizHint">Waveform (time-domain). This is a simple monitor, not a calibration tool.</p>
     </section>
+
+    <section class="card eq-section" aria-labelledby="eqTitle">
+      <h2 id="eqTitle">Equalizer</h2>
+
+      <div class="control">
+        <label class="check" for="eqEnable">
+          <span>Enable Equalizer</span>
+          <input id="eqEnable" type="checkbox" />
+        </label>
+        <div class="muted">Adjust frequency bands to shape the sound.</div>
+      </div>
+
+      <div id="eqControls" class="hidden">
+        <div class="control">
+          <label for="eqPreset">Preset</label>
+          <select id="eqPreset">
+            <option value="">Custom</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <button id="eqSavePresetBtn" class="btn" type="button">Save Preset</button>
+          <button id="eqDeletePresetBtn" class="btn" type="button">Delete Preset</button>
+        </div>
+
+        <div class="control">
+          <label for="eqBass">Bass (60 Hz) <span class="hint" id="eqBassVal">0 dB</span></label>
+          <input id="eqBass" type="range" min="-12" max="12" step="0.5" value="0" />
+        </div>
+
+        <div class="control">
+          <label for="eqLowMid">Low-Mid (250 Hz) <span class="hint" id="eqLowMidVal">0 dB</span></label>
+          <input id="eqLowMid" type="range" min="-12" max="12" step="0.5" value="0" />
+        </div>
+
+        <div class="control">
+          <label for="eqMid">Mid (1 kHz) <span class="hint" id="eqMidVal">0 dB</span></label>
+          <input id="eqMid" type="range" min="-12" max="12" step="0.5" value="0" />
+        </div>
+
+        <div class="control">
+          <label for="eqHighMid">High-Mid (4 kHz) <span class="hint" id="eqHighMidVal">0 dB</span></label>
+          <input id="eqHighMid" type="range" min="-12" max="12" step="0.5" value="0" />
+        </div>
+
+        <div class="control">
+          <label for="eqTreble">Treble (10 kHz) <span class="hint" id="eqTrebleVal">0 dB</span></label>
+          <input id="eqTreble" type="range" min="-12" max="12" step="0.5" value="0" />
+        </div>
+
+        <div class="control">
+          <label for="cutoff">Lowpass Filter <span class="hint" id="cutoffVal">20,000 Hz</span></label>
+          <input id="cutoff" type="range" min="40" max="20000" step="1" value="20000" />
+          <div class="muted">Cuts high frequencies above this point.</div>
+        </div>
+
+        <div class="row">
+          <button id="eqResetBtn" class="btn" type="button">Reset EQ</button>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer class="footer">
     <span class="muted">Built with HTML/CSS/vanilla JS. No external libraries.</span>
   </footer>
 
+  <!-- Load custom song files -->
+  <script src="songs/twinkle-twinkle.js"></script>
+  <script src="songs/mary-had-a-little-lamb.js"></script>
+  <script src="songs/test-song.js"></script>
+  
+  <!-- Main application -->
   <script src="app.js"></script>
 </body>
 </html>

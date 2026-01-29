@@ -9,6 +9,14 @@ const ui = {
 
   sound: document.getElementById('sound'),
   soundVal: document.getElementById('soundVal'),
+  customSong: document.getElementById('customSong'),
+  songStatusText: document.getElementById('songStatusText'),
+  songBpmControl: document.getElementById('songBpmControl'),
+  songBpm: document.getElementById('songBpm'),
+  songBpmVal: document.getElementById('songBpmVal'),
+  favorites: document.getElementById('favorites'),
+  addFavoriteBtn: document.getElementById('addFavoriteBtn'),
+  removeFavoriteBtn: document.getElementById('removeFavoriteBtn'),
   freqControl: document.getElementById('freqControl'),
   frequency: document.getElementById('frequency'),
   frequencyVal: document.getElementById('frequencyVal'),
@@ -20,23 +28,38 @@ const ui = {
   loopControl: document.getElementById('loopControl'),
   loopSong: document.getElementById('loopSong'),
 
-  melodyControl: document.getElementById('melodyControl'),
-  melody: document.getElementById('melody'),
-  melodyVal: document.getElementById('melodyVal'),
-
   volume: document.getElementById('volume'),
   volumeVal: document.getElementById('volumeVal'),
   masterVolume: document.getElementById('masterVolume'),
   masterVolumeVal: document.getElementById('masterVolumeVal'),
   brownNoiseEnable: document.getElementById('brownNoiseEnable'),
+  brownNoiseMixControl: document.getElementById('brownNoiseMixControl'),
   brownNoiseMix: document.getElementById('brownNoiseMix'),
   brownNoiseMixVal: document.getElementById('brownNoiseMixVal'),
   cutoff: document.getElementById('cutoff'),
   cutoffVal: document.getElementById('cutoffVal'),
-  filterHint: document.getElementById('filterHint'),
+
+  eqEnable: document.getElementById('eqEnable'),
+  eqControls: document.getElementById('eqControls'),
+  eqBass: document.getElementById('eqBass'),
+  eqBassVal: document.getElementById('eqBassVal'),
+  eqLowMid: document.getElementById('eqLowMid'),
+  eqLowMidVal: document.getElementById('eqLowMidVal'),
+  eqMid: document.getElementById('eqMid'),
+  eqMidVal: document.getElementById('eqMidVal'),
+  eqHighMid: document.getElementById('eqHighMid'),
+  eqHighMidVal: document.getElementById('eqHighMidVal'),
+  eqTreble: document.getElementById('eqTreble'),
+  eqTrebleVal: document.getElementById('eqTrebleVal'),
+  eqResetBtn: document.getElementById('eqResetBtn'),
+  eqPreset: document.getElementById('eqPreset'),
+  eqSavePresetBtn: document.getElementById('eqSavePresetBtn'),
+  eqDeletePresetBtn: document.getElementById('eqDeletePresetBtn'),
 
   vizMode: document.getElementById('vizMode'),
   vizHint: document.getElementById('vizHint'),
+  smoothing: document.getElementById('smoothing'),
+  smoothingVal: document.getElementById('smoothingVal'),
 
   scope: document.getElementById('scope'),
   levelText: document.getElementById('levelText'),
@@ -63,6 +86,25 @@ const state = {
   brownNoiseController: null,
   brownNoiseGainNode: null,
   brownNoiseMixNode: null,
+
+  // Equalizer nodes
+  eqBassNode: null,
+  eqLowMidNode: null,
+  eqMidNode: null,
+  eqHighMidNode: null,
+  eqTrebleNode: null,
+
+  // Custom song system
+  customSongs: {},
+  currentSong: null,
+  songGainNode: null, // Separate gain node for custom songs
+  songPlayback: {
+    isPlaying: false,
+    currentNote: 0,
+    nextNoteTime: 0,
+    oscillators: [],
+    songBpm: 120
+  },
 
   engine: 'Not initialized',
   running: false,
@@ -113,6 +155,94 @@ const SOUND_PRESETS = {
     mod: null,
     hint: 'White noise (flat spectrum). Bright/hissy without filtering.',
   },
+  blue: {
+    label: 'Blue noise',
+    kind: 'noise',
+    noiseType: 3,
+    filter: { type: 'highpass', frequency: 800, q: 0.7 },
+    mod: null,
+    hint: 'Blue noise (~f). Higher frequency emphasis, crisp and bright.',
+  },
+  violet: {
+    label: 'Violet noise',
+    kind: 'noise',
+    noiseType: 4,
+    filter: { type: 'highpass', frequency: 1200, q: 0.7 },
+    mod: null,
+    hint: 'Violet noise (~f²). Even more high-frequency emphasis, very bright.',
+  },
+  grey: {
+    label: 'Grey noise',
+    kind: 'noise',
+    noiseType: 5,
+    filter: { type: 'lowpass', frequency: 15000, q: 0.7 },
+    mod: null,
+    hint: 'Grey noise (psychoacoustically flat). Balanced to human hearing.',
+  },
+  red: {
+    label: 'Red noise',
+    kind: 'noise',
+    noiseType: 6,
+    filter: { type: 'lowpass', frequency: 8000, q: 0.7 },
+    mod: null,
+    hint: 'Red noise (deeper than brown). Ultra-deep bass rumble.',
+  },
+  deepBrown: {
+    label: 'Deep Brown (extra cozy)',
+    kind: 'noise',
+    noiseType: 2,
+    filter: { type: 'lowpass', frequency: 400, q: 0.9 },
+    mod: { rate: 0.08, depth: 0.15 },
+    hint: 'Extra deep brown noise. Perfect for sleeping.',
+  },
+  cozyBrown: {
+    label: 'Cozy Brown (warm)',
+    kind: 'noise',
+    noiseType: 2,
+    filter: { type: 'lowpass', frequency: 800, q: 0.8 },
+    mod: { rate: 0.15, depth: 0.25 },
+    hint: 'Warm, comforting brown noise with gentle modulation.',
+  },
+  softPink: {
+    label: 'Soft Pink (gentle)',
+    kind: 'noise',
+    noiseType: 1,
+    filter: { type: 'lowpass', frequency: 10000, q: 0.6 },
+    mod: { rate: 0.2, depth: 0.18 },
+    hint: 'Gentle, soft pink noise. Soothing and balanced.',
+  },
+  crispWhite: {
+    label: 'Crisp White (bright)',
+    kind: 'noise',
+    noiseType: 0,
+    filter: { type: 'highpass', frequency: 2000, q: 0.5 },
+    mod: null,
+    hint: 'Bright, crisp white noise with high-pass filter.',
+  },
+  velvetBrown: {
+    label: 'Velvet Brown (smooth)',
+    kind: 'noise',
+    noiseType: 2,
+    filter: { type: 'lowpass', frequency: 600, q: 1.2 },
+    mod: { rate: 0.1, depth: 0.2 },
+    hint: 'Smooth, velvety brown noise. Like soft fabric.',
+  },
+  warmPink: {
+    label: 'Warm Pink (comforting)',
+    kind: 'noise',
+    noiseType: 1,
+    filter: { type: 'lowpass', frequency: 8000, q: 0.9 },
+    mod: { rate: 0.12, depth: 0.22 },
+    hint: 'Warm, comforting pink noise with gentle warmth.',
+  },
+  gentleGrey: {
+    label: 'Gentle Grey (balanced)',
+    kind: 'noise',
+    noiseType: 5,
+    filter: { type: 'lowpass', frequency: 12000, q: 0.6 },
+    mod: { rate: 0.18, depth: 0.2 },
+    hint: 'Balanced, gentle grey noise. Natural and easy.',
+  },
   ocean: {
     label: 'Ocean (modulated brown)',
     kind: 'noise',
@@ -137,21 +267,101 @@ const SOUND_PRESETS = {
     mod: { rate: 0.18, depth: 0.65 },
     hint: 'Wind-like sound: brown noise with bandpass filter and slow modulation.',
   },
+  thunder: {
+    label: 'Thunder storm',
+    kind: 'noise',
+    noiseType: 6,
+    filter: { type: 'lowpass', frequency: 300, q: 0.5 },
+    mod: { rate: 0.05, depth: 0.75 },
+    hint: 'Distant thunder: deep red noise with very slow rumble.',
+  },
+  forestNight: {
+    label: 'Forest at night',
+    kind: 'noise',
+    noiseType: 2,
+    filter: { type: 'bandpass', frequency: 800, q: 0.6 },
+    mod: { rate: 0.25, depth: 0.35 },
+    hint: 'Forest atmosphere: brown noise with nature-like modulation.',
+  },
+  caveAmbience: {
+    label: 'Cave ambience',
+    kind: 'noise',
+    noiseType: 2,
+    filter: { type: 'lowpass', frequency: 250, q: 1.5 },
+    mod: { rate: 0.06, depth: 0.4 },
+    hint: 'Deep cave: very low brown noise with subtle echo feeling.',
+  },
+  mountainWind: {
+    label: 'Mountain wind',
+    kind: 'noise',
+    noiseType: 5,
+    filter: { type: 'bandpass', frequency: 1200, q: 0.5 },
+    mod: { rate: 0.22, depth: 0.55 },
+    hint: 'Mountain wind: grey noise with moderate modulation.',
+  },
+  beachWaves: {
+    label: 'Beach waves',
+    kind: 'noise',
+    noiseType: 0,
+    filter: { type: 'bandpass', frequency: 1500, q: 0.6 },
+    mod: { rate: 0.14, depth: 0.5 },
+    hint: 'Beach waves: white noise with rhythmic wave modulation.',
+  },
+  cityRain: {
+    label: 'City rain',
+    kind: 'noise',
+    noiseType: 5,
+    filter: { type: 'highpass', frequency: 2200, q: 0.8 },
+    mod: { rate: 4.5, depth: 0.3 },
+    hint: 'City rain: grey noise with urban ambience feel.',
+  },
+  riverFlow: {
+    label: 'River flow',
+    kind: 'noise',
+    noiseType: 1,
+    filter: { type: 'bandpass', frequency: 1800, q: 0.7 },
+    mod: { rate: 0.9, depth: 0.42 },
+    hint: 'Flowing river: pink noise with steady water flow.',
+  },
   faucet: {
-    label: 'Faucet (modulated white)',
+    label: 'Faucet drips',
     kind: 'noise',
     noiseType: 0,
     filter: { type: 'bandpass', frequency: 3500, q: 1.2 },
     mod: { rate: 2.8, depth: 0.85 },
-    hint: 'Running water/faucet sound: bright noise with tight bandpass and fast modulation.',
+    hint: 'Running faucet: bright noise with tight bandpass.',
   },
   waterStream: {
-    label: 'Water Stream (modulated white)',
+    label: 'Water stream',
     kind: 'noise',
     noiseType: 0,
     filter: { type: 'bandpass', frequency: 2000, q: 0.8 },
     mod: { rate: 1.2, depth: 0.55 },
-    hint: 'Flowing water stream: white noise with moderate bandpass and gentle flow modulation.',
+    hint: 'Flowing water stream: white noise with flow modulation.',
+  },
+  shower: {
+    label: 'Shower',
+    kind: 'noise',
+    noiseType: 0,
+    filter: { type: 'bandpass', frequency: 4000, q: 0.9 },
+    mod: { rate: 5.5, depth: 0.4 },
+    hint: 'Shower running: white noise with high-frequency emphasis.',
+  },
+  fountain: {
+    label: 'Fountain',
+    kind: 'noise',
+    noiseType: 1,
+    filter: { type: 'bandpass', frequency: 2800, q: 0.7 },
+    mod: { rate: 3.2, depth: 0.48 },
+    hint: 'Water fountain: pink noise with splashing modulation.',
+  },
+  underwaterDeep: {
+    label: 'Underwater (deep)',
+    kind: 'noise',
+    noiseType: 3,
+    filter: { type: 'lowpass', frequency: 500, q: 1.8 },
+    mod: { rate: 0.08, depth: 0.35 },
+    hint: 'Deep underwater: muffled blue noise with pressure feeling.',
   },
   sine: { label: 'Sine tone', kind: 'tone', wave: 'sine', hint: 'Pure tone.' },
   triangle: { label: 'Triangle tone', kind: 'tone', wave: 'triangle', hint: 'Softer harmonic tone.' },
@@ -290,6 +500,670 @@ const VIZ_HINTS = {
   nyan: 'Nyan Cat (internet legend). Pop-Tart cat flies through space leaving a rainbow trail.',
 };
 
+const DEFAULT_EQ_PRESETS = {
+  'Bass Boost': { bass: 6, lowMid: 3, mid: 0, highMid: -2, treble: -3, cutoff: 20000 },
+  'Treble Boost': { bass: -3, lowMid: -2, mid: 0, highMid: 3, treble: 6, cutoff: 20000 },
+  'Vocal Clarity': { bass: -2, lowMid: -1, mid: 4, highMid: 3, treble: 1, cutoff: 20000 },
+  'Deep Bass': { bass: 8, lowMid: 4, mid: -3, highMid: -4, treble: -5, cutoff: 12000 },
+  'Bright': { bass: -1, lowMid: 0, mid: 2, highMid: 4, treble: 5, cutoff: 20000 },
+  'Warm': { bass: 3, lowMid: 2, mid: 0, highMid: -2, treble: -3, cutoff: 16000 },
+  'Smiley': { bass: 4, lowMid: 0, mid: -2, highMid: 0, treble: 4, cutoff: 20000 },
+  'Classical': { bass: 2, lowMid: 1, mid: -1, highMid: 1, treble: 3, cutoff: 20000 },
+  'Rock': { bass: 5, lowMid: 2, mid: -1, highMid: 2, treble: 4, cutoff: 20000 },
+  'Jazz': { bass: 2, lowMid: 1, mid: 1, highMid: 2, treble: 3, cutoff: 18000 },
+};
+
+// ============================================================================
+// CUSTOM SONG SYSTEM
+// ============================================================================
+
+// Instrument definitions - map instrument ID to oscillator type and parameters
+const INSTRUMENTS = {
+  0: { name: 'None', type: 'silence' },
+  1: {
+  name: 'Piano',
+  type: 'custom',
+
+  createOscillator: (ctx, freq) => {
+    // This is the node your playSongNote() automates (gain.gain...)
+    const gainNode = ctx.createGain();
+    gainNode.gain.value = 0;
+
+    // Tone shaping
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = Math.min(12000, 1800 + freq * 2.4);
+    filter.Q.value = 0.9;
+
+    // Body/resonance bump (subtle)
+    const body = ctx.createBiquadFilter();
+    body.type = 'peaking';
+    body.frequency.value = Math.min(900, 180 + freq * 0.25);
+    body.Q.value = 0.8;
+    body.gain.value = 2.0;
+
+    // Glue
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -26;
+    comp.knee.value = 18;
+    comp.ratio.value = 4;
+    comp.attack.value = 0.003;
+    comp.release.value = 0.12;
+
+    // Routing: sources -> filter -> body -> comp -> gainNode
+    filter.connect(body);
+    body.connect(comp);
+    comp.connect(gainNode);
+
+    // Additive partials + slight detune "chorus"
+    const partials = [
+      { mul: 1.0, amp: 1.00 },
+      { mul: 2.0, amp: 0.22 },
+      { mul: 3.0, amp: 0.12 },
+      { mul: 4.0, amp: 0.07 },
+      { mul: 5.0, amp: 0.04 },
+      { mul: 6.0, amp: 0.02 },
+    ];
+
+    const detunes = [-2, 0, +2]; // cents
+    const oscillators = [];
+
+    for (const p of partials) {
+      for (const d of detunes) {
+        const o = ctx.createOscillator();
+        o.type = 'sine';
+        o.frequency.value = freq * p.mul;
+        o.detune.value = d;
+
+        const g = ctx.createGain();
+        const brightTamer = 1 / (1 + (freq / 1100));
+        g.gain.value = (p.amp / detunes.length) * brightTamer;
+
+        o.connect(g);
+        g.connect(filter);
+        oscillators.push(o);
+      }
+    }
+
+    // Hammer noise (scheduled burst at note start)
+    const noiseLen = Math.floor(ctx.sampleRate * 0.02);
+    const noiseBuf = ctx.createBuffer(1, noiseLen, ctx.sampleRate);
+    {
+      const data = noiseBuf.getChannelData(0);
+      for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1);
+    }
+
+    const noiseFilter = ctx.createBiquadFilter();
+    noiseFilter.type = 'bandpass';
+    noiseFilter.frequency.value = Math.min(7000, 1200 + freq * 1.7);
+    noiseFilter.Q.value = 1.5;
+
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.value = 0;
+
+    noiseFilter.connect(noiseGain);
+    noiseGain.connect(filter);
+
+    let noiseSrc = null;
+
+    // Wrapper osc compatible with your scheduler
+    const osc = {
+      start: (t) => {
+        for (const o of oscillators) o.start(t);
+
+        noiseSrc = ctx.createBufferSource();
+        noiseSrc.buffer = noiseBuf;
+        noiseSrc.connect(noiseFilter);
+
+        // quick "tap" aligned with your attack
+        noiseGain.gain.cancelScheduledValues(t);
+        noiseGain.gain.setValueAtTime(0.0, t);
+        noiseGain.gain.linearRampToValueAtTime(0.10, t + 0.003);
+        noiseGain.gain.linearRampToValueAtTime(0.0, t + 0.02);
+
+        noiseSrc.start(t);
+        noiseSrc.stop(t + 0.03);
+      },
+
+      stop: (t) => {
+        // Stop slightly after to avoid clicks; your gain envelope is doing the fade
+        const stopPad = 0.03;
+        for (const o of oscillators) {
+          try { o.stop(t + stopPad); } catch {}
+        }
+        if (noiseSrc) {
+          try { noiseSrc.stop(t + 0.03); } catch {}
+        }
+      }
+    };
+
+    // IMPORTANT: return gainNode (with .gain param) so your playSongNote() can automate it
+    return { osc, gain: gainNode };
+  }
+},
+  2: { name: 'Sine', type: 'sine' },
+  3: { name: 'Sawtooth', type: 'sawtooth' },
+  4: { name: 'Square', type: 'square' },
+  5: { name: 'Triangle', type: 'triangle' },
+  // 6: Electric Piano (softer attack, more bell-ish partials)
+6: {
+  name: 'E-Piano',
+  type: 'custom',
+  createOscillator: (ctx, freq) => {
+    const gainNode = ctx.createGain();
+    gainNode.gain.value = 0;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = Math.min(12000, 1400 + freq * 2.0);
+    filter.Q.value = 0.8;
+
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -28;
+    comp.knee.value = 16;
+    comp.ratio.value = 3.5;
+    comp.attack.value = 0.004;
+    comp.release.value = 0.14;
+
+    filter.connect(comp);
+    comp.connect(gainNode);
+
+    // more "metallic" partial set
+    const partials = [
+      { mul: 1.0, amp: 1.00 },
+      { mul: 2.0, amp: 0.10 },
+      { mul: 3.0, amp: 0.18 },
+      { mul: 4.0, amp: 0.04 },
+      { mul: 5.0, amp: 0.06 },
+    ];
+
+    const detunes = [-1, 0, +1];
+    const oscillators = [];
+
+    for (const p of partials) {
+      for (const d of detunes) {
+        const o = ctx.createOscillator();
+        o.type = 'sine';
+        o.frequency.value = freq * p.mul;
+        o.detune.value = d;
+
+        const g = ctx.createGain();
+        const brightTamer = 1 / (1 + (freq / 1300));
+        g.gain.value = (p.amp / detunes.length) * brightTamer;
+
+        o.connect(g);
+        g.connect(filter);
+        oscillators.push(o);
+      }
+    }
+
+    const osc = {
+      start: (t) => { for (const o of oscillators) o.start(t); },
+      stop: (t) => {
+        const stopPad = 0.03;
+        for (const o of oscillators) { try { o.stop(t + stopPad); } catch {} }
+      }
+    };
+
+    return { osc, gain: gainNode };
+  }
+},
+
+// 7: Bell (clean, bright, inharmonic-ish)
+7: {
+  name: 'Bell',
+  type: 'custom',
+  createOscillator: (ctx, freq) => {
+    const gainNode = ctx.createGain();
+    gainNode.gain.value = 0;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.value = Math.min(2000, 200 + freq * 0.6);
+    filter.Q.value = 0.7;
+
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -30;
+    comp.knee.value = 16;
+    comp.ratio.value = 3;
+    comp.attack.value = 0.002;
+    comp.release.value = 0.18;
+
+    filter.connect(comp);
+    comp.connect(gainNode);
+
+    // inharmonic ratios (approx bell partials)
+    const partials = [
+      { mul: 1.00, amp: 1.00 },
+      { mul: 2.10, amp: 0.35 },
+      { mul: 3.95, amp: 0.22 },
+      { mul: 5.40, amp: 0.16 },
+      { mul: 7.20, amp: 0.10 },
+    ];
+
+    const oscillators = [];
+    for (const p of partials) {
+      const o = ctx.createOscillator();
+      o.type = 'sine';
+      o.frequency.value = freq * p.mul;
+
+      const g = ctx.createGain();
+      g.gain.value = p.amp;
+
+      o.connect(g);
+      g.connect(filter);
+      oscillators.push(o);
+    }
+
+    const osc = {
+      start: (t) => { for (const o of oscillators) o.start(t); },
+      stop: (t) => {
+        const stopPad = 0.05;
+        for (const o of oscillators) { try { o.stop(t + stopPad); } catch {} }
+      }
+    };
+
+    return { osc, gain: gainNode };
+  }
+},
+
+// 8: Soft Pad (warm, wide, slow-feeling—your envelope still controls it)
+8: {
+  name: 'Pad',
+  type: 'custom',
+  createOscillator: (ctx, freq) => {
+    const gainNode = ctx.createGain();
+    gainNode.gain.value = 0;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = Math.min(8000, 900 + freq * 1.2);
+    filter.Q.value = 0.9;
+
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -28;
+    comp.knee.value = 18;
+    comp.ratio.value = 3;
+    comp.attack.value = 0.01;
+    comp.release.value = 0.2;
+
+    filter.connect(comp);
+    comp.connect(gainNode);
+
+    // Use triangle for a softer base + detune for width
+    const detunes = [-7, -3, 0, +3, +7];
+    const oscillators = detunes.map((d) => {
+      const o = ctx.createOscillator();
+      o.type = 'triangle';
+      o.frequency.value = freq;
+      o.detune.value = d;
+      return o;
+    });
+
+    const mix = ctx.createGain();
+    mix.gain.value = 0.18;
+
+    for (const o of oscillators) o.connect(mix);
+    mix.connect(filter);
+
+    const osc = {
+      start: (t) => { for (const o of oscillators) o.start(t); },
+      stop: (t) => {
+        const stopPad = 0.05;
+        for (const o of oscillators) { try { o.stop(t + stopPad); } catch {} }
+      }
+    };
+
+    return { osc, gain: gainNode };
+  }
+},
+
+// 9: Bass (punchy, filtered saw + sub sine)
+9: {
+  name: 'Bass',
+  type: 'custom',
+  createOscillator: (ctx, freq) => {
+    const gainNode = ctx.createGain();
+    gainNode.gain.value = 0;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = Math.min(3000, 500 + freq * 1.1);
+    filter.Q.value = 1.1;
+
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -24;
+    comp.knee.value = 14;
+    comp.ratio.value = 5;
+    comp.attack.value = 0.003;
+    comp.release.value = 0.12;
+
+    filter.connect(comp);
+    comp.connect(gainNode);
+
+    const saw = ctx.createOscillator();
+    saw.type = 'sawtooth';
+    saw.frequency.value = freq;
+
+    const sub = ctx.createOscillator();
+    sub.type = 'sine';
+    sub.frequency.value = freq / 2;
+
+    const mix = ctx.createGain();
+    mix.gain.value = 0.22;
+
+    saw.connect(mix);
+    sub.connect(mix);
+    mix.connect(filter);
+
+    const osc = {
+      start: (t) => { saw.start(t); sub.start(t); },
+      stop: (t) => {
+        const stopPad = 0.03;
+        try { saw.stop(t + stopPad); } catch {}
+        try { sub.stop(t + stopPad); } catch {}
+      }
+    };
+
+    return { osc, gain: gainNode };
+  }
+},
+
+// 10: Pluck (karplus-ish vibe using noise burst into a resonant filter)
+10: {
+  name: 'Pluck',
+  type: 'custom',
+  createOscillator: (ctx, freq) => {
+    const gainNode = ctx.createGain();
+    gainNode.gain.value = 0;
+
+    const reson = ctx.createBiquadFilter();
+    reson.type = 'bandpass';
+    reson.frequency.value = freq;
+    reson.Q.value = 10;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = Math.min(8000, 1200 + freq * 2);
+    filter.Q.value = 0.7;
+
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -28;
+    comp.knee.value = 18;
+    comp.ratio.value = 4;
+    comp.attack.value = 0.003;
+    comp.release.value = 0.12;
+
+    reson.connect(filter);
+    filter.connect(comp);
+    comp.connect(gainNode);
+
+    // A quiet sine underlay helps pitch stability
+    const tone = ctx.createOscillator();
+    tone.type = 'sine';
+    tone.frequency.value = freq;
+
+    const toneGain = ctx.createGain();
+    toneGain.gain.value = 0.08;
+
+    tone.connect(toneGain);
+    toneGain.connect(reson);
+
+    // Noise burst source recreated on start
+    let noiseSrc = null;
+
+    const noiseLen = Math.floor(ctx.sampleRate * 0.03);
+    const noiseBuf = ctx.createBuffer(1, noiseLen, ctx.sampleRate);
+    {
+      const data = noiseBuf.getChannelData(0);
+      for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1);
+    }
+
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.value = 0;
+    noiseGain.connect(reson);
+
+    const osc = {
+      start: (t) => {
+        tone.start(t);
+
+        noiseSrc = ctx.createBufferSource();
+        noiseSrc.buffer = noiseBuf;
+        noiseSrc.connect(noiseGain);
+
+        noiseGain.gain.cancelScheduledValues(t);
+        noiseGain.gain.setValueAtTime(0.0, t);
+        noiseGain.gain.linearRampToValueAtTime(0.35, t + 0.002);
+        noiseGain.gain.linearRampToValueAtTime(0.0, t + 0.02);
+
+        noiseSrc.start(t);
+        noiseSrc.stop(t + 0.03);
+      },
+      stop: (t) => {
+        const stopPad = 0.05;
+        try { tone.stop(t + stopPad); } catch {}
+        if (noiseSrc) { try { noiseSrc.stop(t + 0.03); } catch {} }
+      }
+    };
+
+    return { osc, gain: gainNode };
+  }
+},
+
+};
+
+// Convert piano key number to frequency
+// Key 1 = A0 (27.5 Hz), Key 52 = C4 (Middle C, 261.63 Hz), Key 88 = C8 (4186 Hz)
+function keyToFrequency(keyNum) {
+  if (keyNum === 0) return 0; // Rest/silence
+  if (keyNum < 1 || keyNum > 88) return 0;
+  
+  const A0 = 27.5; // Frequency of A0
+  return A0 * Math.pow(2, (keyNum - 1) / 12);
+}
+
+// Convert note length to duration in seconds based on BPM
+// length: 1=whole, 2=half, 3=triplet, 4=quarter, 8=eighth, 16=sixteenth
+function lengthToDuration(length, bpm) {
+  const quarterNoteTime = 60 / bpm; // Quarter note duration in seconds
+  
+  switch(length) {
+    case 1: return quarterNoteTime * 4; // Whole note
+    case 2: return quarterNoteTime * 2; // Half note
+    case 3: return quarterNoteTime * (2/3); // Triplet
+    case 4: return quarterNoteTime; // Quarter note
+    case 8: return quarterNoteTime / 2; // Eighth note
+    case 16: return quarterNoteTime / 4; // Sixteenth note
+    default: return quarterNoteTime; // Default to quarter note
+  }
+}
+
+// Create an oscillator for a given instrument and frequency
+function createInstrumentOscillator(ctx, instrumentId, frequency) {
+  const instrument = INSTRUMENTS[instrumentId] || INSTRUMENTS[2]; // Default to sine
+  
+  if (instrument.type === 'silence' || frequency === 0) {
+    return null; // No sound for rests
+  }
+  
+  if (instrument.type === 'custom' && instrument.createOscillator) {
+    return instrument.createOscillator(ctx, frequency);
+  }
+  
+  // Standard oscillator types
+  const osc = ctx.createOscillator();
+  osc.type = instrument.type;
+  osc.frequency.value = frequency;
+  
+  const gainNode = ctx.createGain();
+  gainNode.gain.setValueAtTime(0, ctx.currentTime);
+  gainNode.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.01);
+  
+  osc.connect(gainNode);
+  return { osc, gain: gainNode };
+}
+
+// Stop all currently playing notes
+function stopAllSongNotes() {
+  if (!state.songPlayback.oscillators) return;
+  
+  state.songPlayback.oscillators.forEach(item => {
+    if (item && item.osc) {
+      try {
+        item.gain.gain.cancelScheduledValues(state.audioContext.currentTime);
+        item.gain.gain.setValueAtTime(item.gain.gain.value, state.audioContext.currentTime);
+        item.gain.gain.linearRampToValueAtTime(0, state.audioContext.currentTime + 0.05);
+        item.osc.stop(state.audioContext.currentTime + 0.05);
+      } catch (e) {
+        // Ignore errors from already stopped oscillators
+      }
+    }
+  });
+  
+  state.songPlayback.oscillators = [];
+}
+
+// Play a single note from the song
+function playSongNote() {
+  if (!state.currentSong || !state.songPlayback.isPlaying) return;
+  if (!state.audioContext) return;
+  
+  const song = state.currentSong;
+  const noteIndex = state.songPlayback.currentNote;
+  
+  // Check if song is complete
+  if (noteIndex >= song.key.length) {
+    // Loop the song if enabled
+    if (ui.loopSong && ui.loopSong.checked) {
+      state.songPlayback.currentNote = 0;
+      state.songPlayback.nextNoteTime = state.audioContext.currentTime;
+    } else {
+      stopAllSongNotes();
+      state.songPlayback.isPlaying = false;
+      setStatus('Song complete');
+      return;
+    }
+    return;
+  }
+  
+  const instrumentId = song.instrument[noteIndex];
+  const keyNum = song.key[noteIndex];
+  const noteLength = song.length[noteIndex];
+  const bpm = state.songPlayback.songBpm;
+  
+  const frequency = keyToFrequency(keyNum);
+  const duration = lengthToDuration(noteLength, bpm);
+  
+  // Create and play the note
+  if (frequency > 0 && instrumentId !== 0) {
+    const noteNode = createInstrumentOscillator(state.audioContext, instrumentId, frequency);
+    
+    if (noteNode) {
+      const { osc, gain } = noteNode;
+      const now = state.audioContext.currentTime;
+      const scheduleTime = Math.max(now, state.songPlayback.nextNoteTime);
+      
+      // Connect to song gain node (separate from background sound)
+      gain.connect(state.songGainNode);
+      
+      // Schedule the note
+      osc.start(scheduleTime);
+      
+      // Add release envelope
+      gain.gain.cancelScheduledValues(scheduleTime);
+      gain.gain.setValueAtTime(0, scheduleTime);
+
+      // Fast attack
+      gain.gain.linearRampToValueAtTime(0.35, scheduleTime + 0.006);
+
+      // Quick decay to lower sustain
+      const decayEnd = scheduleTime + Math.min(0.12, duration * 0.4);
+      gain.gain.linearRampToValueAtTime(0.18, decayEnd);
+
+      // Hold until release
+      const releaseStart = scheduleTime + Math.max(0, duration - 0.045);
+      gain.gain.setValueAtTime(0.18, releaseStart);
+
+      // Release
+      gain.gain.linearRampToValueAtTime(0, scheduleTime + duration);
+
+      // gain.gain.cancelScheduledValues(scheduleTime);
+      // gain.gain.setValueAtTime(0, scheduleTime);
+      // gain.gain.linearRampToValueAtTime(0.3, scheduleTime + 0.01);
+      // gain.gain.setValueAtTime(0.3, scheduleTime + duration - 0.05);
+      // gain.gain.linearRampToValueAtTime(0, scheduleTime + duration);
+      
+      osc.stop(scheduleTime + duration);
+      
+      state.songPlayback.oscillators.push({ osc, gain });
+    }
+  }
+  
+  // Schedule next note
+  state.songPlayback.nextNoteTime += duration;
+  state.songPlayback.currentNote++;
+  
+  // Schedule next note callback
+  const lookahead = 0.1; // Look ahead 100ms
+  const nextCallTime = (state.songPlayback.nextNoteTime - state.audioContext.currentTime - lookahead) * 1000;
+  
+  if (nextCallTime > 0) {
+    setTimeout(() => playSongNote(), nextCallTime);
+  } else {
+    playSongNote(); // Call immediately if we're behind schedule
+  }
+}
+
+// Start playing the current song
+function startSongPlayback() {
+  if (!state.currentSong) return;
+  if (!state.audioContext) return;
+  
+  stopAllSongNotes();
+  
+  state.songPlayback.isPlaying = true;
+  state.songPlayback.currentNote = 0;
+  state.songPlayback.nextNoteTime = state.audioContext.currentTime;
+  state.songPlayback.oscillators = [];
+  
+  setStatus(`Playing: ${state.currentSong.songInfo.title}`);
+  playSongNote();
+}
+
+// Stop song playback
+function stopSongPlayback() {
+  state.songPlayback.isPlaying = false;
+  stopAllSongNotes();
+  setStatus('Idle');
+}
+
+// Load custom songs from global registry
+// Songs are loaded via script tags in index.html and register themselves in window.CUSTOM_SONGS
+function loadCustomSongs() {
+  if (!window.CUSTOM_SONGS) {
+    console.warn('No custom songs found. Make sure song script tags are loaded before app.js');
+    return;
+  }
+  
+  for (const [songId, songData] of Object.entries(window.CUSTOM_SONGS)) {
+    try {
+      if (songData.songInfo && songData.instrument && songData.length && songData.key) {
+        state.customSongs[songId] = songData;
+        
+        // Add to dropdown
+        const option = document.createElement('option');
+        option.value = songId;
+        option.textContent = songData.songInfo.title;
+        ui.customSong.appendChild(option);
+        
+        console.log(`Loaded song: ${songData.songInfo.title}`);
+      }
+    } catch (error) {
+      console.error(`Failed to load song ${songId}:`, error);
+    }
+  }
+}
+
 function updateSecureContextBadge() {
   const secure = window.isSecureContext;
   const proto = location.protocol;
@@ -311,19 +1185,28 @@ function uiSync() {
   ui.freqControl.classList.toggle('hidden', preset.kind !== 'tone');
   ui.bpmControl.classList.toggle('hidden', preset.kind !== 'demo');
   ui.loopControl.classList.toggle('hidden', preset.kind !== 'demo');
-  ui.melodyControl.classList.toggle('hidden', preset.kind !== 'demo');
   ui.frequencyVal.textContent = fmtHz(ui.frequency.value);
   ui.bpmVal.textContent = String(Math.round(Number(ui.bpm.value) || 136));
-  ui.melodyVal.textContent = fmtPct(ui.melody.value);
 
   ui.volumeVal.textContent = fmtPct(ui.volume.value);
   ui.masterVolumeVal.textContent = fmtPct(ui.masterVolume.value);
+  ui.brownNoiseMixControl.classList.toggle('hidden', !ui.brownNoiseEnable.checked);
   ui.brownNoiseMixVal.textContent = fmtPct(ui.brownNoiseMix.value);
   ui.cutoffVal.textContent = `${Number(ui.cutoff.value).toLocaleString()} Hz`;
 
-  ui.vizHint.textContent = VIZ_HINTS[ui.vizMode.value] || VIZ_HINTS.waveform;
+  // Update EQ value displays
+  ui.eqControls.classList.toggle('hidden', !ui.eqEnable.checked);
+  ui.eqBassVal.textContent = `${Number(ui.eqBass.value).toFixed(1)} dB`;
+  ui.eqLowMidVal.textContent = `${Number(ui.eqLowMid.value).toFixed(1)} dB`;
+  ui.eqMidVal.textContent = `${Number(ui.eqMid.value).toFixed(1)} dB`;
+  ui.eqHighMidVal.textContent = `${Number(ui.eqHighMid.value).toFixed(1)} dB`;
+  ui.eqTrebleVal.textContent = `${Number(ui.eqTreble.value).toFixed(1)} dB`;
 
-  ui.filterHint.textContent = preset.hint || 'Filter shapes the sound.';
+  ui.vizHint.textContent = VIZ_HINTS[ui.vizMode.value] || VIZ_HINTS.waveform;
+  
+  // Update smoothing display
+  const smoothingValue = Number(ui.smoothing.value);
+  ui.smoothingVal.textContent = smoothingValue === 0 ? 'Off' : `${smoothingValue}%`;
 }
 
 function linearFromSlider(slider01) {
@@ -483,6 +1366,8 @@ function createTranceDemo(ctx) {
   noise.connect(noiseHP);
 
   let bpm = Number(ui.bpm.value) || 136;
+  let loopEnabled = !!ui.loopSong.checked;
+  let melodyLevel = 60 / 100;
   let isRunning = false;
   let nextNoteTime = 0;
   let currentStep = 0;
@@ -600,6 +1485,8 @@ function createTranceDemo(ctx) {
   }
 
   function mkLead(t, midi) {
+    if (melodyLevel <= 0.001) return;
+    
     // small supersaw-ish stack
     const baseHz = midiToHz(midi);
     const g = ctx.createGain();
@@ -610,8 +1497,9 @@ function createTranceDemo(ctx) {
     filt.frequency.exponentialRampToValueAtTime(2400, t + 0.07);
     filt.frequency.exponentialRampToValueAtTime(1100, t + 0.25);
 
+    const targetGain = 0.18 * melodyLevel;
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.18, t + 0.015);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0001, targetGain), t + 0.015);
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
 
     const detunes = [-7, +7];
@@ -675,12 +1563,24 @@ function createTranceDemo(ctx) {
       scheduleStep(stepInBar, nextNoteTime);
       nextNoteTime += timePerStep();
       currentStep += 1;
+      
+      // If loop is disabled and we've played 4 bars, stop
+      if (!loopEnabled && currentStep >= 64) {
+        output.gain.setTargetAtTime(0.0001, nextNoteTime, 0.3);
+        setStatus('Finished');
+        stopTransport();
+        setTimeout(() => {
+          try { autoStopFromDemo(); } catch { /* ignore */ }
+        }, 250);
+        return;
+      }
     }
   }
 
   function startTransport() {
     if (isRunning) return;
     isRunning = true;
+    currentStep = 0;
     nextNoteTime = ctx.currentTime + 0.05;
     timerId = setInterval(scheduler, lookaheadMs);
   }
@@ -711,6 +1611,8 @@ function createTranceDemo(ctx) {
     startTransport,
     stopTransport,
     setBpm: (v) => { bpm = Math.max(60, Math.min(220, Number(v) || 136)); },
+    setLoop: (v) => { loopEnabled = !!v; },
+    setMelody: (v) => { melodyLevel = Math.max(0, Math.min(1, (Number(v) || 0) / 100)); },
     stop: stopAll,
   };
 }
@@ -868,7 +1770,7 @@ function createDwarvenBridgeDemo(ctx) {
 
   let bpm = Number(ui.bpm.value) || 92;
   let loopEnabled = !!ui.loopSong.checked;
-  let melodyLevel = (Number(ui.melody.value) || 60) / 100;
+  let melodyLevel = 60 / 100;
   let isRunning = false;
   let nextNoteTime = 0;
   let currentStep = 0;
@@ -1192,6 +2094,7 @@ function createDwarvenBridgeDemo(ctx) {
   function startTransport() {
     if (isRunning) return;
     isRunning = true;
+    currentStep = 0;
     nextNoteTime = ctx.currentTime + 0.05;
     timerId = setInterval(scheduler, lookaheadMs);
   }
@@ -1383,7 +2286,7 @@ function createMongolianThroatDemo(ctx) {
   // Transport
   let bpm = Number(ui.bpm.value) || 58;
   let loopEnabled = !!ui.loopSong.checked;
-  let melodyLevel = (Number(ui.melody.value) || 70) / 100;
+  let melodyLevel = 70 / 100;
   let isRunning = false;
   let nextNoteTime = 0;
   let currentStep = 0;
@@ -1503,6 +2406,7 @@ function createMongolianThroatDemo(ctx) {
   function startTransport() {
     if (isRunning) return;
     isRunning = true;
+    currentStep = 0;
     nextNoteTime = ctx.currentTime + 0.05;
     timerId = setInterval(scheduler, lookaheadMs);
   }
@@ -1631,7 +2535,7 @@ function createCelestialGardenDemo(ctx) {
   // Transport
   let bpm = Number(ui.bpm.value) || 45;
   let loopEnabled = !!ui.loopSong.checked;
-  let melodyLevel = (Number(ui.melody.value) || 70) / 100;
+  let melodyLevel = 70 / 100;
   let isRunning = false;
   let nextNoteTime = 0;
   let currentStep = 0;
@@ -1912,7 +2816,7 @@ function createDeepForestDemo(ctx) {
   // Transport
   let bpm = Number(ui.bpm.value) || 38;
   let loopEnabled = !!ui.loopSong.checked;
-  let melodyLevel = (Number(ui.melody.value) || 70) / 100;
+  let melodyLevel = 70 / 100;
   let isRunning = false;
   let nextNoteTime = 0;
   let currentStep = 0;
@@ -2158,7 +3062,7 @@ function createCrystallineCavernDemo(ctx) {
   // Transport
   let bpm = Number(ui.bpm.value) || 40;
   let loopEnabled = !!ui.loopSong.checked;
-  let melodyLevel = (Number(ui.melody.value) || 70) / 100;
+  let melodyLevel = 70 / 100;
   let isRunning = false;
   let nextNoteTime = 0;
   let currentStep = 0;
@@ -2441,7 +3345,7 @@ function createDesertMirageDemo(ctx) {
   // Transport
   let bpm = Number(ui.bpm.value) || 35;
   let loopEnabled = !!ui.loopSong.checked;
-  let melodyLevel = (Number(ui.melody.value) || 70) / 100;
+  let melodyLevel = 70 / 100;
   let isRunning = false;
   let nextNoteTime = 0;
   let currentStep = 0;
@@ -2713,7 +3617,7 @@ function createMorningMistDemo(ctx) {
   // Transport
   let bpm = Number(ui.bpm.value) || 32;
   let loopEnabled = !!ui.loopSong.checked;
-  let melodyLevel = (Number(ui.melody.value) || 70) / 100;
+  let melodyLevel = 70 / 100;
   let isRunning = false;
   let nextNoteTime = 0;
   let currentStep = 0;
@@ -2974,7 +3878,7 @@ function createUnderwaterDreamDemo(ctx) {
   // Transport
   let bpm = Number(ui.bpm.value) || 30;
   let loopEnabled = !!ui.loopSong.checked;
-  let melodyLevel = (Number(ui.melody.value) || 70) / 100;
+  let melodyLevel = 70 / 100;
   let isRunning = false;
   let nextNoteTime = 0;
   let currentStep = 0;
@@ -3241,7 +4145,7 @@ function createSynthwaveDemo(ctx) {
 
   let bpm = Number(ui.bpm.value) || 105;
   let loopEnabled = !!ui.loopSong.checked;
-  let melodyLevel = (Number(ui.melody.value) || 60) / 100;
+  let melodyLevel = 60 / 100;
   let isRunning = false;
   let nextNoteTime = 0;
   let currentStep = 0;
@@ -3752,7 +4656,7 @@ function createSovietwaveDemo(ctx) {
 
   let bpm = Number(ui.bpm.value) || 98;
   let loopEnabled = !!ui.loopSong.checked;
-  let melodyLevel = (Number(ui.melody.value) || 60) / 100;
+  let melodyLevel = 60 / 100;
   let isRunning = false;
   let nextNoteTime = 0;
   let currentStep = 0;
@@ -4233,7 +5137,7 @@ function createSovietRadioDemo(ctx) {
 
   let bpm = Number(ui.bpm.value) || 85;
   let loopEnabled = !!ui.loopSong.checked;
-  let melodyLevel = (Number(ui.melody.value) || 60) / 100;
+  let melodyLevel = 60 / 100;
   let isRunning = false;
   let nextNoteTime = 0;
   let currentStep = 0;
@@ -4673,7 +5577,7 @@ function createRedSquareDemo(ctx) {
 
   let bpm = Number(ui.bpm.value) || 92;
   let loopEnabled = !!ui.loopSong.checked;
-  let melodyLevel = (Number(ui.melody.value) || 60) / 100;
+  let melodyLevel = 60 / 100;
   let isRunning = false;
   let nextNoteTime = 0;
   let currentStep = 0;
@@ -5118,7 +6022,7 @@ function createFactoryFloorsDemo(ctx) {
 
   let bpm = Number(ui.bpm.value) || 102;
   let loopEnabled = !!ui.loopSong.checked;
-  let melodyLevel = (Number(ui.melody.value) || 60) / 100;
+  let melodyLevel = 60 / 100;
   let isRunning = false;
   let nextNoteTime = 0;
   let currentStep = 0;
@@ -5590,7 +6494,7 @@ function createGlasnostDreamsDemo(ctx) {
 
   let bpm = Number(ui.bpm.value) || 95;
   let loopEnabled = !!ui.loopSong.checked;
-  let melodyLevel = (Number(ui.melody.value) || 60) / 100;
+  let melodyLevel = 60 / 100;
   let isRunning = false;
   let nextNoteTime = 0;
   let currentStep = 0;
@@ -6005,7 +6909,7 @@ function createProbabilityGardenDemo(ctx) {
 
   let bpm = Number(ui.bpm.value) || 110;
   let loopEnabled = !!ui.loopSong.checked;
-  let melodyLevel = (Number(ui.melody.value) || 80) / 100;
+  let melodyLevel = 80 / 100;
   let isRunning = false;
   let nextNoteTime = 0;
   let currentStep = 0;
@@ -6370,7 +7274,7 @@ function createAuroraDemo(ctx) {
 
   let bpm = Number(ui.bpm.value) || 72;
   let loopEnabled = !!ui.loopSong.checked;
-  let melodyLevel = (Number(ui.melody.value) || 55) / 100;
+  let melodyLevel = 55 / 100;
   let isRunning = false;
   let nextNoteTime = 0;
   let currentStep = 0;
@@ -6673,7 +7577,7 @@ function createElectricReverieDemo(ctx) {
 
   let bpm = Number(ui.bpm.value) || 110;
   let loopEnabled = !!ui.loopSong.checked;
-  let melodyLevel = (Number(ui.melody.value) || 60) / 100;
+  let melodyLevel = 60 / 100;
   let isRunning = false;
   let nextNoteTime = 0;
   let currentStep = 0;
@@ -7207,7 +8111,7 @@ function createNeonPulseDemo(ctx) {
 
   let bpm = Number(ui.bpm.value) || 128;
   let loopEnabled = !!ui.loopSong.checked;
-  let melodyLevel = (Number(ui.melody.value) || 60) / 100;
+  let melodyLevel = 60 / 100;
   let isRunning = false;
   let nextNoteTime = 0;
   let currentStep = 0;
@@ -7762,7 +8666,7 @@ function createNebulaDemo(ctx) {
 
   let bpm = Number(ui.bpm.value) || 88;
   let loopEnabled = !!ui.loopSong.checked;
-  let melodyLevel = (Number(ui.melody.value) || 60) / 100;
+  let melodyLevel = 60 / 100;
   let isRunning = false;
   let nextNoteTime = 0;
   let currentStep = 0;
@@ -7994,6 +8898,17 @@ async function buildGraph() {
   state.analyserNode.fftSize = 2048;
   state.masterGainNode = state.audioContext.createGain();
   state.masterGainNode.gain.value = (Number(ui.masterVolume.value) || 80) / 100;
+  
+  // Create separate gain node for custom songs
+  state.songGainNode = state.audioContext.createGain();
+  state.songGainNode.gain.value = 0.5; // Default song volume
+  state.songGainNode.connect(state.masterGainNode);
+  
+  // Create smoothing filter (low-pass for softening harsh edges)
+  state.smoothingFilterNode = state.audioContext.createBiquadFilter();
+  state.smoothingFilterNode.type = 'lowpass';
+  state.smoothingFilterNode.frequency.value = 20000; // Start bypassed
+  state.smoothingFilterNode.Q.value = 0.7;
 
   state.modGainNode = state.audioContext.createGain();
   state.modGainNode.gain.value = 1.0;
@@ -8043,12 +8958,57 @@ async function buildGraph() {
     state.sourceController = created;
   }
 
-  // Main audio chain: source -> filter -> modGain -> gain -> masterGain -> analyser -> output
+  // Create EQ nodes (5-band parametric equalizer using peaking filters)
+  state.eqBassNode = state.audioContext.createBiquadFilter();
+  state.eqBassNode.type = 'peaking';
+  state.eqBassNode.frequency.value = 60;
+  state.eqBassNode.Q.value = 1.0;
+  state.eqBassNode.gain.value = 0;
+
+  state.eqLowMidNode = state.audioContext.createBiquadFilter();
+  state.eqLowMidNode.type = 'peaking';
+  state.eqLowMidNode.frequency.value = 250;
+  state.eqLowMidNode.Q.value = 1.0;
+  state.eqLowMidNode.gain.value = 0;
+
+  state.eqMidNode = state.audioContext.createBiquadFilter();
+  state.eqMidNode.type = 'peaking';
+  state.eqMidNode.frequency.value = 1000;
+  state.eqMidNode.Q.value = 1.0;
+  state.eqMidNode.gain.value = 0;
+
+  state.eqHighMidNode = state.audioContext.createBiquadFilter();
+  state.eqHighMidNode.type = 'peaking';
+  state.eqHighMidNode.frequency.value = 4000;
+  state.eqHighMidNode.Q.value = 1.0;
+  state.eqHighMidNode.gain.value = 0;
+
+  state.eqTrebleNode = state.audioContext.createBiquadFilter();
+  state.eqTrebleNode.type = 'peaking';
+  state.eqTrebleNode.frequency.value = 10000;
+  state.eqTrebleNode.Q.value = 1.0;
+  state.eqTrebleNode.gain.value = 0;
+
+  // Main audio chain: source -> EQ chain -> filter -> modGain -> gain -> masterGain -> analyser -> output
   // Brown noise chain: brownNoise -> brownNoiseMixNode -> brownNoiseGain -> masterGain (parallel)
-  state.sourceNode.connect(state.filterNode);
+  
+  // Connect EQ chain (series of peaking filters)
+  if (ui.eqEnable.checked) {
+    state.sourceNode.connect(state.eqBassNode);
+    state.eqBassNode.connect(state.eqLowMidNode);
+    state.eqLowMidNode.connect(state.eqMidNode);
+    state.eqMidNode.connect(state.eqHighMidNode);
+    state.eqHighMidNode.connect(state.eqTrebleNode);
+    state.eqTrebleNode.connect(state.filterNode);
+  } else {
+    // Bypass EQ if disabled
+    state.sourceNode.connect(state.filterNode);
+  }
+  
   state.filterNode.connect(state.modGainNode);
   state.modGainNode.connect(state.gainNode);
-  state.gainNode.connect(state.masterGainNode);
+  state.gainNode.connect(state.smoothingFilterNode);
+  state.smoothingFilterNode.connect(state.masterGainNode);
   
   // Connect brown noise mixer (parallel to main source)
   state.brownNoiseNode.connect(state.brownNoiseMixNode);
@@ -8081,12 +9041,15 @@ async function buildGraph() {
   // Apply preset filter defaults (and set UI sliders to match)
   if (preset.filter) {
     state.filterNode.type = preset.filter.type;
-    ui.cutoff.value = String(preset.filter.frequency);
-    state.filterNode.frequency.value = preset.filter.frequency;
+    // Don't override cutoff if EQ is enabled - let user control it
+    if (!ui.eqEnable.checked) {
+      ui.cutoff.value = String(preset.filter.frequency);
+    }
+    state.filterNode.frequency.value = Number(ui.cutoff.value) || 20000;
     state.filterNode.Q.value = preset.filter.q || 0.7;
   } else {
     state.filterNode.type = 'lowpass';
-    state.filterNode.frequency.value = Number(ui.cutoff.value) || 12000;
+    state.filterNode.frequency.value = Number(ui.cutoff.value) || 20000;
   }
 
   applyParams();
@@ -8140,7 +9103,16 @@ function ensureVisualizerRunning() {
 
     let rms = 0;
 
-    if (mode === 'particles') {
+    if (mode === 'none') {
+      // No visual effects - just clear canvas and show basic level
+      analyser.getByteTimeDomainData(waveBuffer);
+      for (let i = 0; i < waveBuffer.length; i++) {
+        const v = (waveBuffer[i] - 128) / 128;
+        rms += v * v;
+      }
+      rms = Math.sqrt(rms / waveBuffer.length);
+      ui.levelText.textContent = `Level: ${(rms * 100).toFixed(1)}%`;
+    } else if (mode === 'particles') {
       // Particle visualizer
       // Compute energy metrics
       let totalEnergy = 0;
@@ -8820,6 +9792,1238 @@ function ensureVisualizerRunning() {
       }
       
       ui.levelText.textContent = `NYAN CAT~ | Energy: ${(totalEnergy * 100).toFixed(1)}% | Speed: ${speed.toFixed(1)}x`;
+    } else if (mode === 'airplane') {
+      // Airplane visualizer - plane flies across sky with audio-reactive altitude and speed
+      analyser.getByteFrequencyData(freqBuffer);
+      analyser.getByteTimeDomainData(waveBuffer);
+      
+      // Calculate energy metrics
+      let totalEnergy = 0;
+      let bassEnergy = 0;
+      let midEnergy = 0;
+      let highEnergy = 0;
+      
+      for (let i = 0; i < freqBuffer.length; i++) {
+        const v = freqBuffer[i] / 255;
+        totalEnergy += v;
+        if (i < freqBuffer.length * 0.15) bassEnergy += v;
+        else if (i < freqBuffer.length * 0.4) midEnergy += v;
+        else highEnergy += v;
+      }
+      
+      totalEnergy /= freqBuffer.length;
+      bassEnergy /= (freqBuffer.length * 0.15);
+      midEnergy /= (freqBuffer.length * 0.25);
+      highEnergy /= (freqBuffer.length * 0.6);
+      
+      // Calculate RMS for level display
+      rms = 0;
+      for (let i = 0; i < waveBuffer.length; i++) {
+        const centered = (waveBuffer[i] - 128) / 128;
+        rms += centered * centered;
+      }
+      rms = Math.sqrt(rms / waveBuffer.length);
+      
+      // Draw sky gradient background
+      const skyGradient = ctx2d.createLinearGradient(0, 0, 0, h);
+      skyGradient.addColorStop(0, '#1a4d7a');
+      skyGradient.addColorStop(0.5, '#4a90d9');
+      skyGradient.addColorStop(1, '#87ceeb');
+      ctx2d.fillStyle = skyGradient;
+      ctx2d.fillRect(0, 0, w, h);
+      
+      // Draw clouds (react to bass)
+      const numClouds = 8;
+      const cloudOffset = (Date.now() / 80) % (w + 200);
+      ctx2d.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      for (let i = 0; i < numClouds; i++) {
+        const cx = ((i * 200) - cloudOffset) % (w + 200) - 100;
+        const cy = h * 0.2 + (i % 3) * 50 + Math.sin(Date.now() / 1000 + i) * 10 * bassEnergy;
+        const cloudSize = 40 + (bassEnergy * 20);
+        
+        // Draw puffy cloud shape
+        ctx2d.beginPath();
+        ctx2d.arc(cx, cy, cloudSize, 0, Math.PI * 2);
+        ctx2d.arc(cx + cloudSize * 0.6, cy, cloudSize * 0.8, 0, Math.PI * 2);
+        ctx2d.arc(cx - cloudSize * 0.6, cy, cloudSize * 0.7, 0, Math.PI * 2);
+        ctx2d.arc(cx, cy - cloudSize * 0.5, cloudSize * 0.6, 0, Math.PI * 2);
+        ctx2d.fill();
+      }
+      
+      // Airplane position and properties - floats gently in center with audio reactivity
+      const planeX = w / 2 + Math.sin(Date.now() / 2000) * 30 + (highEnergy * 40) - 20;
+      const baseAltitude = h * 0.45;
+      const planeY = baseAltitude + Math.sin(Date.now() / 1500) * 25 + (midEnergy * 50) - 25;
+      const planeSize = 40;
+      const bankAngle = Math.sin(Date.now() / 2500) * 0.08 + (totalEnergy * 0.15) - 0.075;
+      
+      ctx2d.save();
+      ctx2d.translate(planeX, planeY);
+      ctx2d.rotate(bankAngle);
+      
+      // Draw contrail (vapor trail)
+      const trailLength = 150;
+      const trailGradient = ctx2d.createLinearGradient(-trailLength, 0, 0, 0);
+      trailGradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+      trailGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.3)');
+      trailGradient.addColorStop(1, 'rgba(255, 255, 255, 0.6)');
+      ctx2d.fillStyle = trailGradient;
+      ctx2d.fillRect(-trailLength, -3, trailLength, 6);
+      
+      // Draw airplane body (fuselage)
+      ctx2d.fillStyle = '#d0d0d0';
+      ctx2d.beginPath();
+      ctx2d.ellipse(0, 0, planeSize, planeSize * 0.25, 0, 0, Math.PI * 2);
+      ctx2d.fill();
+      
+      // Draw wings
+      ctx2d.fillStyle = '#ffffff';
+      ctx2d.beginPath();
+      ctx2d.moveTo(-planeSize * 0.3, 0);
+      ctx2d.lineTo(-planeSize * 0.5, -planeSize * 0.8);
+      ctx2d.lineTo(planeSize * 0.1, -planeSize * 0.6);
+      ctx2d.lineTo(planeSize * 0.2, 0);
+      ctx2d.closePath();
+      ctx2d.fill();
+      
+      ctx2d.beginPath();
+      ctx2d.moveTo(-planeSize * 0.3, 0);
+      ctx2d.lineTo(-planeSize * 0.5, planeSize * 0.8);
+      ctx2d.lineTo(planeSize * 0.1, planeSize * 0.6);
+      ctx2d.lineTo(planeSize * 0.2, 0);
+      ctx2d.closePath();
+      ctx2d.fill();
+      
+      // Draw tail
+      ctx2d.fillStyle = '#e0e0e0';
+      ctx2d.beginPath();
+      ctx2d.moveTo(-planeSize * 0.9, 0);
+      ctx2d.lineTo(-planeSize * 1.1, -planeSize * 0.4);
+      ctx2d.lineTo(-planeSize * 0.7, -planeSize * 0.35);
+      ctx2d.closePath();
+      ctx2d.fill();
+      
+      ctx2d.beginPath();
+      ctx2d.moveTo(-planeSize * 0.9, 0);
+      ctx2d.lineTo(-planeSize * 1.1, planeSize * 0.4);
+      ctx2d.lineTo(-planeSize * 0.7, planeSize * 0.35);
+      ctx2d.closePath();
+      ctx2d.fill();
+      
+      // Draw cockpit window
+      ctx2d.fillStyle = '#4a90d9';
+      ctx2d.beginPath();
+      ctx2d.arc(planeSize * 0.6, 0, planeSize * 0.15, 0, Math.PI * 2);
+      ctx2d.fill();
+      
+      // Draw engine highlight (glows with energy)
+      const engineGlow = totalEnergy;
+      ctx2d.fillStyle = `rgba(255, 200, 100, ${0.3 + engineGlow * 0.7})`;
+      ctx2d.beginPath();
+      ctx2d.arc(planeSize * 0.8, 0, planeSize * 0.12, 0, Math.PI * 2);
+      ctx2d.fill();
+      
+      ctx2d.restore();
+      
+      // Draw altitude indicator lines (audio waveform in background)
+      ctx2d.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx2d.lineWidth = 1;
+      for (let i = 0; i < 5; i++) {
+        const y = (i / 4) * h;
+        ctx2d.beginPath();
+        ctx2d.setLineDash([10, 10]);
+        ctx2d.moveTo(0, y);
+        ctx2d.lineTo(w, y);
+        ctx2d.stroke();
+      }
+      ctx2d.setLineDash([]);
+      
+      ui.levelText.textContent = `Altitude: ${Math.round((1 - (planeY / h)) * 100)}% | Bank: ${(bankAngle * 57.3).toFixed(0)}° | Energy: ${(totalEnergy * 100).toFixed(1)}%`;
+    } else if (mode === 'windows') {
+      // Windows Startup visualizer - classic Windows logo with audio-reactive animation
+      analyser.getByteFrequencyData(freqBuffer);
+      analyser.getByteTimeDomainData(waveBuffer);
+      
+      // Calculate energy metrics
+      let totalEnergy = 0;
+      let bassEnergy = 0;
+      let midEnergy = 0;
+      let highEnergy = 0;
+      
+      for (let i = 0; i < freqBuffer.length; i++) {
+        const v = freqBuffer[i] / 255;
+        totalEnergy += v;
+        if (i < freqBuffer.length * 0.15) bassEnergy += v;
+        else if (i < freqBuffer.length * 0.4) midEnergy += v;
+        else highEnergy += v;
+      }
+      
+      totalEnergy /= freqBuffer.length;
+      bassEnergy /= (freqBuffer.length * 0.15);
+      midEnergy /= (freqBuffer.length * 0.25);
+      highEnergy /= (freqBuffer.length * 0.6);
+      
+      // Calculate RMS
+      rms = 0;
+      for (let i = 0; i < waveBuffer.length; i++) {
+        const centered = (waveBuffer[i] - 128) / 128;
+        rms += centered * centered;
+      }
+      rms = Math.sqrt(rms / waveBuffer.length);
+      
+      // Draw dark gradient background
+      const bgGradient = ctx2d.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) / 1.5);
+      bgGradient.addColorStop(0, '#1a1a2e');
+      bgGradient.addColorStop(1, '#0a0a15');
+      ctx2d.fillStyle = bgGradient;
+      ctx2d.fillRect(0, 0, w, h);
+      
+      // Draw light beams radiating from center (react to bass)
+      const numBeams = 8;
+      const beamIntensity = 0.1 + bassEnergy * 0.3;
+      ctx2d.save();
+      ctx2d.translate(w / 2, h / 2);
+      for (let i = 0; i < numBeams; i++) {
+        const angle = (i / numBeams) * Math.PI * 2 + (Date.now() / 3000);
+        const beamLength = Math.max(w, h);
+        const beamGradient = ctx2d.createLinearGradient(0, 0, Math.cos(angle) * beamLength, Math.sin(angle) * beamLength);
+        beamGradient.addColorStop(0, `rgba(100, 150, 255, ${beamIntensity})`);
+        beamGradient.addColorStop(0.5, `rgba(100, 150, 255, ${beamIntensity * 0.3})`);
+        beamGradient.addColorStop(1, 'rgba(100, 150, 255, 0)');
+        
+        ctx2d.fillStyle = beamGradient;
+        ctx2d.beginPath();
+        ctx2d.moveTo(0, 0);
+        ctx2d.arc(0, 0, beamLength, angle - 0.1, angle + 0.1);
+        ctx2d.closePath();
+        ctx2d.fill();
+      }
+      ctx2d.restore();
+      
+      // Windows logo center position and size
+      const logoSize = 80 + totalEnergy * 60;
+      const gap = 8;
+      const paneSize = logoSize / 2 - gap;
+      const centerX = w / 2;
+      const centerY = h / 2;
+      
+      // Rotation angle based on time and energy
+      const rotationAngle = (Date.now() / 8000) + (totalEnergy * 0.5);
+      
+      // Draw Windows logo (four colored squares)
+      ctx2d.save();
+      ctx2d.translate(centerX, centerY);
+      ctx2d.rotate(rotationAngle);
+      
+      // Draw glow effect behind logo
+      const glowSize = logoSize + 40 + (bassEnergy * 50);
+      const glowGradient = ctx2d.createRadialGradient(0, 0, logoSize * 0.3, 0, 0, glowSize);
+      glowGradient.addColorStop(0, `rgba(0, 120, 215, ${0.3 + midEnergy * 0.4})`);
+      glowGradient.addColorStop(1, 'rgba(0, 120, 215, 0)');
+      ctx2d.fillStyle = glowGradient;
+      ctx2d.fillRect(-glowSize, -glowSize, glowSize * 2, glowSize * 2);
+      
+      // Red pane (top-left) - reacts to bass
+      const redIntensity = 0.7 + bassEnergy * 0.3;
+      ctx2d.fillStyle = `rgba(244, 83, 79, ${redIntensity})`;
+      ctx2d.shadowColor = '#f4534f';
+      ctx2d.shadowBlur = 20 + bassEnergy * 30;
+      ctx2d.fillRect(-logoSize / 2, -logoSize / 2, paneSize, paneSize);
+      
+      // Green pane (top-right) - reacts to mids
+      const greenIntensity = 0.7 + midEnergy * 0.3;
+      ctx2d.fillStyle = `rgba(127, 186, 0, ${greenIntensity})`;
+      ctx2d.shadowColor = '#7fba00';
+      ctx2d.shadowBlur = 20 + midEnergy * 30;
+      ctx2d.fillRect(gap, -logoSize / 2, paneSize, paneSize);
+      
+      // Blue pane (bottom-left) - reacts to highs
+      const blueIntensity = 0.7 + highEnergy * 0.3;
+      ctx2d.fillStyle = `rgba(0, 120, 215, ${blueIntensity})`;
+      ctx2d.shadowColor = '#0078d7';
+      ctx2d.shadowBlur = 20 + highEnergy * 30;
+      ctx2d.fillRect(-logoSize / 2, gap, paneSize, paneSize);
+      
+      // Yellow pane (bottom-right) - reacts to total energy
+      const yellowIntensity = 0.7 + totalEnergy * 0.3;
+      ctx2d.fillStyle = `rgba(255, 185, 0, ${yellowIntensity})`;
+      ctx2d.shadowColor = '#ffb900';
+      ctx2d.shadowBlur = 20 + totalEnergy * 30;
+      ctx2d.fillRect(gap, gap, paneSize, paneSize);
+      
+      ctx2d.shadowBlur = 0;
+      ctx2d.restore();
+      
+      // Draw audio waveform around the logo in circular pattern
+      ctx2d.strokeStyle = 'rgba(100, 150, 255, 0.6)';
+      ctx2d.lineWidth = 2;
+      ctx2d.beginPath();
+      
+      const waveRadius = logoSize + 50;
+      const samples = Math.min(waveBuffer.length, 200);
+      for (let i = 0; i < samples; i++) {
+        const angle = (i / samples) * Math.PI * 2;
+        const amplitude = ((waveBuffer[Math.floor(i * waveBuffer.length / samples)] - 128) / 128) * 30;
+        const radius = waveRadius + amplitude * (20 + totalEnergy * 30);
+        const x = centerX + Math.cos(angle) * radius;
+        const y = centerY + Math.sin(angle) * radius;
+        
+        if (i === 0) ctx2d.moveTo(x, y);
+        else ctx2d.lineTo(x, y);
+      }
+      ctx2d.closePath();
+      ctx2d.stroke();
+      
+      // Draw frequency spectrum bars in corners
+      const barCount = 12;
+      const barWidth = 3;
+      const barSpacing = 5;
+      const maxBarHeight = 60;
+      
+      for (let i = 0; i < barCount; i++) {
+        const freqIndex = Math.floor(i * freqBuffer.length / barCount);
+        const barHeight = (freqBuffer[freqIndex] / 255) * maxBarHeight;
+        const barColor = `hsla(${200 + i * 10}, 70%, 60%, 0.8)`;
+        
+        ctx2d.fillStyle = barColor;
+        // Top-left corner
+        ctx2d.fillRect(20 + i * (barWidth + barSpacing), 20, barWidth, barHeight);
+        // Top-right corner
+        ctx2d.fillRect(w - 20 - (i + 1) * (barWidth + barSpacing), 20, barWidth, barHeight);
+        // Bottom-left corner
+        ctx2d.fillRect(20 + i * (barWidth + barSpacing), h - 20 - barHeight, barWidth, barHeight);
+        // Bottom-right corner
+        ctx2d.fillRect(w - 20 - (i + 1) * (barWidth + barSpacing), h - 20 - barHeight, barWidth, barHeight);
+      }
+      
+      ui.levelText.textContent = `Windows Startup | Bass: ${(bassEnergy * 100).toFixed(0)}% | Mid: ${(midEnergy * 100).toFixed(0)}% | High: ${(highEnergy * 100).toFixed(0)}%`;
+    } else if (mode === 'stargate') {
+      // STARGATE VISUALIZER
+      // Get frequency and time data
+      analyser.getByteFrequencyData(freqBuffer);
+      analyser.getByteTimeDomainData(waveBuffer);
+      
+      // Calculate energy metrics
+      let totalEnergy = 0;
+      let bassEnergy = 0;
+      let midEnergy = 0;
+      let highEnergy = 0;
+      
+      for (let i = 0; i < freqBuffer.length; i++) {
+        const normalized = freqBuffer[i] / 255;
+        totalEnergy += normalized;
+        
+        // Bass: 0-15%, Mid: 15-40%, High: 40-100%
+        if (i < freqBuffer.length * 0.15) {
+          bassEnergy += normalized;
+        } else if (i < freqBuffer.length * 0.4) {
+          midEnergy += normalized;
+        } else {
+          highEnergy += normalized;
+        }
+      }
+      
+      totalEnergy /= freqBuffer.length;
+      bassEnergy /= (freqBuffer.length * 0.15);
+      midEnergy /= (freqBuffer.length * 0.25);
+      highEnergy /= (freqBuffer.length * 0.6);
+      
+      const freqData = freqBuffer;
+      const timeData = waveBuffer;
+      const buflen = timeData.length;
+      
+      // Deep space background
+      const bgGradient = ctx2d.createRadialGradient(w/2, h/2, 0, w/2, h/2, Math.max(w, h)/1.5);
+      bgGradient.addColorStop(0, '#0a0a1a');
+      bgGradient.addColorStop(0.5, '#050510');
+      bgGradient.addColorStop(1, '#000000');
+      ctx2d.fillStyle = bgGradient;
+      ctx2d.fillRect(0, 0, w, h);
+      
+      // Background stars
+      ctx2d.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      const starCount = 150;
+      for (let i = 0; i < starCount; i++) {
+        const starX = (i * 137.508) % w; // Golden angle distribution
+        const starY = (i * 197.508) % h;
+        const starSize = 0.5 + (i % 3) * 0.5 + bassEnergy * 1.5;
+        const twinkle = Math.sin(Date.now() / 500 + i) * 0.3 + 0.7;
+        ctx2d.globalAlpha = twinkle * (0.4 + (i % 5) * 0.1);
+        ctx2d.beginPath();
+        ctx2d.arc(starX, starY, starSize, 0, Math.PI * 2);
+        ctx2d.fill();
+      }
+      
+      ctx2d.globalAlpha = 1;
+      
+      // Center position and sizing
+      const centerX = w / 2;
+      const centerY = h / 2;
+      const gateRadius = Math.min(w, h) * 0.35;
+      const ringThickness = gateRadius * 0.15;
+      const rotation = Date.now() / 5000 + totalEnergy * 0.3; // Slow rotation
+      
+      // Outer glow/energy field
+      const outerGlow = ctx2d.createRadialGradient(centerX, centerY, gateRadius * 0.7, centerX, centerY, gateRadius * 1.4);
+      outerGlow.addColorStop(0, `rgba(0, 150, 255, ${bassEnergy * 0.3})`);
+      outerGlow.addColorStop(0.5, `rgba(0, 100, 200, ${bassEnergy * 0.15})`);
+      outerGlow.addColorStop(1, 'rgba(0, 50, 150, 0)');
+      ctx2d.fillStyle = outerGlow;
+      ctx2d.beginPath();
+      ctx2d.arc(centerX, centerY, gateRadius * 1.4, 0, Math.PI * 2);
+      ctx2d.fill();
+      
+      // Event Horizon (blue rippling center)
+      const horizonRadius = gateRadius - ringThickness;
+      const horizonGradient = ctx2d.createRadialGradient(centerX, centerY, 0, centerX, centerY, horizonRadius);
+      horizonGradient.addColorStop(0, `rgba(100, 180, 255, ${0.9 + totalEnergy * 0.1})`);
+      horizonGradient.addColorStop(0.4, `rgba(50, 120, 200, ${0.8 + totalEnergy * 0.2})`);
+      horizonGradient.addColorStop(0.7, `rgba(20, 80, 180, ${0.7 + bassEnergy * 0.3})`);
+      horizonGradient.addColorStop(1, `rgba(0, 40, 120, ${0.5 + midEnergy * 0.3})`);
+      ctx2d.fillStyle = horizonGradient;
+      ctx2d.beginPath();
+      ctx2d.arc(centerX, centerY, horizonRadius, 0, Math.PI * 2);
+      ctx2d.fill();
+      
+      // Ripples in event horizon
+      ctx2d.strokeStyle = 'rgba(150, 200, 255, 0.5)';
+      ctx2d.lineWidth = 2;
+      const rippleCount = 5;
+      for (let i = 0; i < rippleCount; i++) {
+        const ripplePhase = (Date.now() / 1000 + i * (Math.PI * 2 / rippleCount)) % (Math.PI * 2);
+        const rippleRadius = (horizonRadius * 0.2) + (Math.sin(ripplePhase) * 0.5 + 0.5) * horizonRadius * 0.7;
+        const rippleAlpha = (Math.sin(ripplePhase) * 0.5 + 0.5) * 0.4 + totalEnergy * 0.3;
+        ctx2d.globalAlpha = rippleAlpha;
+        ctx2d.beginPath();
+        ctx2d.arc(centerX, centerY, rippleRadius, 0, Math.PI * 2);
+        ctx2d.stroke();
+      }
+      
+      ctx2d.globalAlpha = 1;
+      
+      // Waveform inside event horizon (circular)
+      ctx2d.strokeStyle = 'rgba(200, 230, 255, 0.6)';
+      ctx2d.lineWidth = 2;
+      ctx2d.beginPath();
+      const wavePoints = 128;
+      for (let i = 0; i < wavePoints; i++) {
+        const angle = (i / wavePoints) * Math.PI * 2;
+        const sample = timeData[Math.floor((i / wavePoints) * buflen)];
+        const amplitude = (sample - 128) / 128;
+        const radius = horizonRadius * 0.5 + amplitude * horizonRadius * 0.2;
+        const x = centerX + Math.cos(angle) * radius;
+        const y = centerY + Math.sin(angle) * radius;
+        if (i === 0) ctx2d.moveTo(x, y);
+        else ctx2d.lineTo(x, y);
+      }
+      ctx2d.closePath();
+      ctx2d.stroke();
+      
+      // Gate ring (metallic gray)
+      const ringGradient = ctx2d.createRadialGradient(centerX, centerY, horizonRadius, centerX, centerY, gateRadius);
+      ringGradient.addColorStop(0, '#4a4a4a');
+      ringGradient.addColorStop(0.5, '#2a2a2a');
+      ringGradient.addColorStop(1, '#1a1a1a');
+      ctx2d.fillStyle = ringGradient;
+      ctx2d.beginPath();
+      ctx2d.arc(centerX, centerY, gateRadius, 0, Math.PI * 2);
+      ctx2d.arc(centerX, centerY, horizonRadius, 0, Math.PI * 2, true); // Inner cutout
+      ctx2d.fill();
+      
+      // Inner ring shine
+      ctx2d.strokeStyle = 'rgba(100, 100, 120, 0.6)';
+      ctx2d.lineWidth = 2;
+      ctx2d.beginPath();
+      ctx2d.arc(centerX, centerY, horizonRadius + 3, 0, Math.PI * 2);
+      ctx2d.stroke();
+      
+      // Outer ring shine
+      ctx2d.strokeStyle = 'rgba(80, 80, 100, 0.5)';
+      ctx2d.lineWidth = 2;
+      ctx2d.beginPath();
+      ctx2d.arc(centerX, centerY, gateRadius - 3, 0, Math.PI * 2);
+      ctx2d.stroke();
+      
+      // Chevrons (9 symbols around the gate)
+      const chevronCount = 9;
+      const chevronSize = ringThickness * 0.6;
+      ctx2d.save();
+      ctx2d.translate(centerX, centerY);
+      
+      for (let i = 0; i < chevronCount; i++) {
+        const angle = rotation + (i / chevronCount) * Math.PI * 2;
+        ctx2d.save();
+        ctx2d.rotate(angle);
+        
+        // Determine if chevron is "locked" based on frequency data
+        const freqIndex = Math.floor((i / chevronCount) * freqData.length);
+        const intensity = freqData[freqIndex] / 255;
+        const isLocked = intensity > 0.5;
+        
+        // Chevron position
+        const chevX = 0;
+        const chevY = -gateRadius + ringThickness / 2;
+        
+        // Chevron glow when locked
+        if (isLocked) {
+          ctx2d.shadowBlur = 20 + intensity * 30;
+          ctx2d.shadowColor = `rgba(255, 150, 0, ${intensity})`;
+          ctx2d.fillStyle = `rgba(255, 150, 0, ${0.6 + intensity * 0.4})`;
+        } else {
+          ctx2d.shadowBlur = 0;
+          ctx2d.fillStyle = 'rgba(120, 120, 120, 0.7)';
+        }
+        
+        // Draw chevron (V-shape)
+        ctx2d.beginPath();
+        ctx2d.moveTo(chevX, chevY - chevronSize * 0.5);
+        ctx2d.lineTo(chevX - chevronSize * 0.4, chevY);
+        ctx2d.lineTo(chevX - chevronSize * 0.25, chevY);
+        ctx2d.lineTo(chevX, chevY - chevronSize * 0.3);
+        ctx2d.lineTo(chevX + chevronSize * 0.25, chevY);
+        ctx2d.lineTo(chevX + chevronSize * 0.4, chevY);
+        ctx2d.closePath();
+        ctx2d.fill();
+        
+        // Chevron outline
+        ctx2d.strokeStyle = isLocked ? 'rgba(255, 200, 100, 0.8)' : 'rgba(80, 80, 80, 0.5)';
+        ctx2d.lineWidth = 1;
+        ctx2d.stroke();
+        
+        ctx2d.restore();
+      }
+      
+      ctx2d.restore();
+      ctx2d.shadowBlur = 0;
+      
+      // Glyphs on ring (decorative symbols)
+      ctx2d.fillStyle = 'rgba(150, 150, 170, 0.6)';
+      ctx2d.font = `${ringThickness * 0.4}px monospace`;
+      ctx2d.textAlign = 'center';
+      ctx2d.textBaseline = 'middle';
+      const glyphCount = 36;
+      const glyphSymbols = '☥⚡⚜✦✧✪✫✬✭✮✯⊕⊗⊙⊛⊚◉◈◇◆';
+      ctx2d.save();
+      ctx2d.translate(centerX, centerY);
+      
+      for (let i = 0; i < glyphCount; i++) {
+        const angle = rotation * 0.3 + (i / glyphCount) * Math.PI * 2;
+        const glyphRadius = (gateRadius + horizonRadius) / 2;
+        const x = Math.cos(angle) * glyphRadius;
+        const y = Math.sin(angle) * glyphRadius;
+        const symbol = glyphSymbols[i % glyphSymbols.length];
+        ctx2d.fillText(symbol, x, y);
+      }
+      
+      ctx2d.restore();
+      
+      // Frequency bars outside the gate (energy indicators)
+      const barCount = 8;
+      const barRadius = gateRadius * 1.25;
+      const barLength = gateRadius * 0.15;
+      ctx2d.save();
+      ctx2d.translate(centerX, centerY);
+      
+      for (let i = 0; i < barCount; i++) {
+        const angle = (i / barCount) * Math.PI * 2;
+        const freqIndex = Math.floor((i / barCount) * freqData.length);
+        const barHeight = (freqData[freqIndex] / 255) * barLength;
+        
+        ctx2d.save();
+        ctx2d.rotate(angle);
+        
+        // Gradient for bar
+        const barGrad = ctx2d.createLinearGradient(0, -barRadius, 0, -barRadius - barLength);
+        barGrad.addColorStop(0, 'rgba(0, 150, 255, 0.3)');
+        barGrad.addColorStop(1, 'rgba(0, 200, 255, 0.9)');
+        ctx2d.fillStyle = barGrad;
+        
+        ctx2d.fillRect(-3, -barRadius, 6, -barHeight);
+        
+        ctx2d.restore();
+      }
+      
+      ctx2d.restore();
+      
+      // Display info
+      ui.levelText.textContent = `Stargate | Energy: ${(totalEnergy * 100).toFixed(0)}% | Chevrons: ${chevronCount} | Active: ${freqData.filter(v => v > 128).length}`;
+    } else if (mode === 'hyperspace') {
+      // HYPERSPACE VISUALIZER
+      // Get frequency and time data
+      analyser.getByteFrequencyData(freqBuffer);
+      analyser.getByteTimeDomainData(waveBuffer);
+      
+      // Calculate energy metrics
+      let totalEnergy = 0;
+      let bassEnergy = 0;
+      let midEnergy = 0;
+      let highEnergy = 0;
+      
+      for (let i = 0; i < freqBuffer.length; i++) {
+        const normalized = freqBuffer[i] / 255;
+        totalEnergy += normalized;
+        
+        if (i < freqBuffer.length * 0.15) {
+          bassEnergy += normalized;
+        } else if (i < freqBuffer.length * 0.4) {
+          midEnergy += normalized;
+        } else {
+          highEnergy += normalized;
+        }
+      }
+      
+      totalEnergy /= freqBuffer.length;
+      bassEnergy /= (freqBuffer.length * 0.15);
+      midEnergy /= (freqBuffer.length * 0.25);
+      highEnergy /= (freqBuffer.length * 0.6);
+      
+      // Deep space background with motion blur effect
+      ctx2d.fillStyle = 'rgba(0, 0, 5, 0.2)'; // Semi-transparent for trail effect
+      ctx2d.fillRect(0, 0, w, h);
+      
+      const centerX = w / 2;
+      const centerY = h / 2;
+      
+      // Warp speed calculation (faster with energy)
+      const baseSpeed = 2 + totalEnergy * 8;
+      const warpFactor = 1 + bassEnergy * 2;
+      
+      // Create/update star field if needed
+      if (!state.hyperspaceStars || state.hyperspaceStars.length === 0) {
+        state.hyperspaceStars = [];
+        for (let i = 0; i < 300; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const distance = Math.random() * Math.max(w, h);
+          state.hyperspaceStars.push({
+            angle: angle,
+            distance: distance,
+            speed: 1 + Math.random() * 2,
+            size: Math.random() * 2,
+            hue: Math.random() * 60 + 180 // Blue-cyan range
+          });
+        }
+      }
+      
+      // Update and draw stars
+      ctx2d.lineCap = 'round';
+      state.hyperspaceStars.forEach(star => {
+        // Update position
+        star.distance += star.speed * baseSpeed * warpFactor;
+        
+        // Reset star if it goes off screen
+        if (star.distance > Math.max(w, h) * 1.5) {
+          star.distance = 0;
+          star.angle = Math.random() * Math.PI * 2;
+          star.speed = 1 + Math.random() * 2;
+          star.hue = Math.random() * 60 + 180;
+        }
+        
+        // Calculate position
+        const x = centerX + Math.cos(star.angle) * star.distance;
+        const y = centerY + Math.sin(star.angle) * star.distance;
+        
+        // Previous position for streak
+        const prevDist = star.distance - star.speed * baseSpeed * warpFactor;
+        const prevX = centerX + Math.cos(star.angle) * prevDist;
+        const prevY = centerY + Math.sin(star.angle) * prevDist;
+        
+        // Draw star streak
+        const starIntensity = Math.min(1, star.distance / (Math.max(w, h) * 0.3));
+        const streakLength = Math.min(star.distance * 0.3, 100) * warpFactor;
+        
+        // Create gradient for streak
+        const gradient = ctx2d.createLinearGradient(prevX, prevY, x, y);
+        gradient.addColorStop(0, `hsla(${star.hue}, 100%, 70%, 0)`);
+        gradient.addColorStop(0.5, `hsla(${star.hue}, 100%, 80%, ${starIntensity * 0.5})`);
+        gradient.addColorStop(1, `hsla(${star.hue}, 100%, 90%, ${starIntensity})`);
+        
+        ctx2d.strokeStyle = gradient;
+        ctx2d.lineWidth = star.size * (1 + totalEnergy * 2) * starIntensity;
+        ctx2d.beginPath();
+        ctx2d.moveTo(prevX, prevY);
+        ctx2d.lineTo(x, y);
+        ctx2d.stroke();
+        
+        // Bright core at tip
+        if (starIntensity > 0.3) {
+          ctx2d.fillStyle = `hsla(${star.hue}, 100%, 95%, ${starIntensity * 0.8})`;
+          ctx2d.shadowBlur = 10 * totalEnergy;
+          ctx2d.shadowColor = `hsla(${star.hue}, 100%, 80%, ${starIntensity})`;
+          ctx2d.beginPath();
+          ctx2d.arc(x, y, star.size * (1 + totalEnergy), 0, Math.PI * 2);
+          ctx2d.fill();
+          ctx2d.shadowBlur = 0;
+        }
+      });
+      
+      // Warp tunnel effect - concentric rings
+      const ringCount = 12;
+      const tunnelSpeed = Date.now() / 100;
+      
+      for (let i = 0; i < ringCount; i++) {
+        const ringPhase = (tunnelSpeed + i * 30) % 360;
+        const ringRadius = (ringPhase / 360) * Math.max(w, h) * 0.8;
+        
+        if (ringRadius > 50) {
+          const ringAlpha = 1 - (ringRadius / (Math.max(w, h) * 0.8));
+          const ringHue = 200 + Math.sin(ringPhase / 30) * 30;
+          
+          ctx2d.strokeStyle = `hsla(${ringHue}, 80%, 60%, ${ringAlpha * 0.3 * (1 + totalEnergy * 0.5)})`;
+          ctx2d.lineWidth = 2 + bassEnergy * 4;
+          ctx2d.beginPath();
+          ctx2d.arc(centerX, centerY, ringRadius, 0, Math.PI * 2);
+          ctx2d.stroke();
+        }
+      }
+      
+      // Speed lines from center (radial)
+      const lineCount = 16;
+      ctx2d.strokeStyle = `rgba(100, 180, 255, ${0.2 + totalEnergy * 0.3})`;
+      ctx2d.lineWidth = 1;
+      
+      for (let i = 0; i < lineCount; i++) {
+        const angle = (i / lineCount) * Math.PI * 2;
+        const innerRadius = 50;
+        const outerRadius = Math.max(w, h) * 0.6;
+        
+        const x1 = centerX + Math.cos(angle) * innerRadius;
+        const y1 = centerY + Math.sin(angle) * innerRadius;
+        const x2 = centerX + Math.cos(angle) * outerRadius;
+        const y2 = centerY + Math.sin(angle) * outerRadius;
+        
+        const gradient = ctx2d.createLinearGradient(x1, y1, x2, y2);
+        gradient.addColorStop(0, `rgba(150, 200, 255, ${0.5 + bassEnergy * 0.5})`);
+        gradient.addColorStop(1, 'rgba(100, 180, 255, 0)');
+        
+        ctx2d.strokeStyle = gradient;
+        ctx2d.beginPath();
+        ctx2d.moveTo(x1, y1);
+        ctx2d.lineTo(x2, y2);
+        ctx2d.stroke();
+      }
+      
+      // Central warp core
+      const coreRadius = 30 + bassEnergy * 40;
+      const coreGradient = ctx2d.createRadialGradient(centerX, centerY, 0, centerX, centerY, coreRadius);
+      coreGradient.addColorStop(0, `rgba(255, 255, 255, ${0.8 + totalEnergy * 0.2})`);
+      coreGradient.addColorStop(0.3, `rgba(150, 220, 255, ${0.6 + midEnergy * 0.4})`);
+      coreGradient.addColorStop(0.7, `rgba(80, 150, 255, ${0.3 + totalEnergy * 0.3})`);
+      coreGradient.addColorStop(1, 'rgba(0, 100, 200, 0)');
+      
+      ctx2d.fillStyle = coreGradient;
+      ctx2d.beginPath();
+      ctx2d.arc(centerX, centerY, coreRadius, 0, Math.PI * 2);
+      ctx2d.fill();
+      
+      // Rotating energy rings around core
+      const energyRings = 3;
+      const rotation = Date.now() / 500;
+      
+      for (let i = 0; i < energyRings; i++) {
+        const ringRadius = coreRadius + (i + 1) * 15;
+        const ringRotation = rotation + i * (Math.PI * 2 / energyRings);
+        const segments = 6;
+        
+        for (let s = 0; s < segments; s++) {
+          if (s % 2 === 0) continue; // Create gaps
+          
+          const startAngle = ringRotation + (s / segments) * Math.PI * 2;
+          const endAngle = ringRotation + ((s + 1) / segments) * Math.PI * 2;
+          
+          ctx2d.strokeStyle = `rgba(100, 200, 255, ${0.6 + totalEnergy * 0.4})`;
+          ctx2d.lineWidth = 3 + bassEnergy * 3;
+          ctx2d.beginPath();
+          ctx2d.arc(centerX, centerY, ringRadius, startAngle, endAngle);
+          ctx2d.stroke();
+        }
+      }
+      
+      // Frequency visualization as outer pulse rings
+      const freqRingCount = 8;
+      for (let i = 0; i < freqRingCount; i++) {
+        const freqIndex = Math.floor((i / freqRingCount) * freqBuffer.length);
+        const freqValue = freqBuffer[freqIndex] / 255;
+        const ringRadius = Math.max(w, h) * 0.4 + (i * 15) + freqValue * 30;
+        
+        ctx2d.strokeStyle = `hsla(${200 + i * 10}, 70%, 60%, ${freqValue * 0.4})`;
+        ctx2d.lineWidth = 2;
+        ctx2d.beginPath();
+        ctx2d.arc(centerX, centerY, ringRadius, 0, Math.PI * 2);
+        ctx2d.stroke();
+      }
+      
+      // Edge vignette effect
+      const vignetteGradient = ctx2d.createRadialGradient(centerX, centerY, Math.max(w, h) * 0.3, centerX, centerY, Math.max(w, h) * 0.8);
+      vignetteGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+      vignetteGradient.addColorStop(1, 'rgba(0, 0, 20, 0.7)');
+      ctx2d.fillStyle = vignetteGradient;
+      ctx2d.fillRect(0, 0, w, h);
+      
+      // Display info
+      const warpSpeed = (baseSpeed * warpFactor).toFixed(1);
+      ui.levelText.textContent = `Hyperspace | Warp: ${warpSpeed}x | Energy: ${(totalEnergy * 100).toFixed(0)}% | Stars: ${state.hyperspaceStars.length}`;
+    } else if (mode === 'blackhole') {
+      // BLACK HOLE VISUALIZER
+      // Get frequency and time data
+      analyser.getByteFrequencyData(freqBuffer);
+      analyser.getByteTimeDomainData(waveBuffer);
+      
+      // Calculate energy metrics
+      let totalEnergy = 0;
+      let bassEnergy = 0;
+      let midEnergy = 0;
+      let highEnergy = 0;
+      
+      for (let i = 0; i < freqBuffer.length; i++) {
+        const normalized = freqBuffer[i] / 255;
+        totalEnergy += normalized;
+        
+        if (i < freqBuffer.length * 0.15) {
+          bassEnergy += normalized;
+        } else if (i < freqBuffer.length * 0.4) {
+          midEnergy += normalized;
+        } else {
+          highEnergy += normalized;
+        }
+      }
+      
+      totalEnergy /= freqBuffer.length;
+      bassEnergy /= (freqBuffer.length * 0.15);
+      midEnergy /= (freqBuffer.length * 0.25);
+      highEnergy /= (freqBuffer.length * 0.6);
+      
+      // Deep space background
+      ctx2d.fillStyle = '#000000';
+      ctx2d.fillRect(0, 0, w, h);
+      
+      const centerX = w / 2;
+      const centerY = h / 2;
+      
+      // Background stars (distant, unaffected by gravity)
+      ctx2d.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      for (let i = 0; i < 80; i++) {
+        const starX = (i * 137.508) % w;
+        const starY = (i * 197.508) % h;
+        const distance = Math.sqrt(Math.pow(starX - centerX, 2) + Math.pow(starY - centerY, 2));
+        if (distance > Math.min(w, h) * 0.4) { // Only draw far away
+          const starSize = 0.5 + (i % 3) * 0.3;
+          ctx2d.beginPath();
+          ctx2d.arc(starX, starY, starSize, 0, Math.PI * 2);
+          ctx2d.fill();
+        }
+      }
+      
+      // Event horizon radius (grows slightly with bass)
+      const eventHorizonRadius = Math.min(w, h) * 0.12 + bassEnergy * 10;
+      const diskOuterRadius = eventHorizonRadius * 5;
+      
+      // Initialize matter particles if needed
+      if (!state.blackholeParticles || state.blackholeParticles.length === 0) {
+        state.blackholeParticles = [];
+        for (let i = 0; i < 200; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const distance = eventHorizonRadius * 1.5 + Math.random() * (diskOuterRadius - eventHorizonRadius * 1.5);
+          state.blackholeParticles.push({
+            angle: angle,
+            distance: distance,
+            orbitSpeed: 0.02 + (1 / distance) * 50, // Faster orbit closer to center
+            size: 1 + Math.random() * 2,
+            temperature: Math.random() // 0 = red/orange, 1 = blue/white
+          });
+        }
+      }
+      
+      // Accretion disk - draw in layers from back to front
+      const diskRotation = Date.now() / 1000;
+      
+      // Draw accretion disk particles
+      state.blackholeParticles.forEach(particle => {
+        // Update particle position
+        particle.angle += particle.orbitSpeed * (1 + totalEnergy * 0.5);
+        
+        // Pull particles toward center (gravitational effect)
+        const pullStrength = 0.1 * (1 + bassEnergy * 0.5);
+        particle.distance -= pullStrength;
+        
+        // Reset particle if it falls into event horizon
+        if (particle.distance < eventHorizonRadius * 1.2) {
+          particle.angle = Math.random() * Math.PI * 2;
+          particle.distance = diskOuterRadius * (0.8 + Math.random() * 0.2);
+          particle.orbitSpeed = 0.02 + (1 / particle.distance) * 50;
+          particle.temperature = Math.random();
+        }
+        
+        // Calculate 3D position (disk is tilted)
+        const tilt = Math.PI / 6; // 30 degree tilt
+        const x = centerX + Math.cos(particle.angle) * particle.distance;
+        const y = centerY + Math.sin(particle.angle) * particle.distance * Math.cos(tilt);
+        const z = Math.sin(particle.angle) * particle.distance * Math.sin(tilt);
+        
+        // Calculate brightness based on position (front is brighter)
+        const brightness = 0.3 + (z > 0 ? 0.7 : 0.3);
+        
+        // Color based on temperature and distance (closer = hotter = bluer)
+        const heatFactor = 1 - (particle.distance / diskOuterRadius);
+        let hue, sat, light;
+        
+        if (heatFactor > 0.7) {
+          // Very hot - blue-white
+          hue = 200;
+          sat = 100;
+          light = 80;
+        } else if (heatFactor > 0.4) {
+          // Hot - white-yellow
+          hue = 50;
+          sat = 100;
+          light = 70;
+        } else {
+          // Cooler - orange-red
+          hue = 20;
+          sat = 100;
+          light = 50;
+        }
+        
+        const alpha = brightness * (0.6 + totalEnergy * 0.4) * (1 - heatFactor * 0.3);
+        
+        ctx2d.fillStyle = `hsla(${hue}, ${sat}%, ${light}%, ${alpha})`;
+        ctx2d.shadowBlur = 3 + heatFactor * 8;
+        ctx2d.shadowColor = `hsla(${hue}, ${sat}%, ${light}%, ${alpha})`;
+        
+        const particleSize = particle.size * (1 + heatFactor * 2) * (1 + totalEnergy * 0.5);
+        ctx2d.beginPath();
+        ctx2d.arc(x, y, particleSize, 0, Math.PI * 2);
+        ctx2d.fill();
+      });
+      
+      ctx2d.shadowBlur = 0;
+      
+      // Inner accretion disk glow rings
+      for (let i = 0; i < 8; i++) {
+        const ringRadius = eventHorizonRadius * (1.3 + i * 0.15);
+        const ringAlpha = 0.1 + (8 - i) * 0.05 + totalEnergy * 0.1;
+        const ringHue = 40 - i * 5;
+        
+        ctx2d.strokeStyle = `hsla(${ringHue}, 100%, 60%, ${ringAlpha})`;
+        ctx2d.lineWidth = 4 + bassEnergy * 6;
+        ctx2d.beginPath();
+        // Ellipse for tilted disk
+        ctx2d.ellipse(centerX, centerY, ringRadius, ringRadius * 0.4, 0, 0, Math.PI * 2);
+        ctx2d.stroke();
+      }
+      
+      // Gravitational lensing effect - light bending rings
+      const lensingRings = 3;
+      for (let i = 0; i < lensingRings; i++) {
+        const ringRadius = eventHorizonRadius * (1.1 + i * 0.1);
+        const ringAlpha = 0.3 - i * 0.08;
+        
+        const gradient = ctx2d.createRadialGradient(centerX, centerY, ringRadius - 2, centerX, centerY, ringRadius + 2);
+        gradient.addColorStop(0, `rgba(255, 255, 255, 0)`);
+        gradient.addColorStop(0.5, `rgba(200, 220, 255, ${ringAlpha + midEnergy * 0.2})`);
+        gradient.addColorStop(1, `rgba(255, 255, 255, 0)`);
+        
+        ctx2d.strokeStyle = gradient;
+        ctx2d.lineWidth = 3;
+        ctx2d.beginPath();
+        ctx2d.arc(centerX, centerY, ringRadius, 0, Math.PI * 2);
+        ctx2d.stroke();
+      }
+      
+      // Event Horizon - pure black center with subtle edge glow
+      const horizonGradient = ctx2d.createRadialGradient(centerX, centerY, 0, centerX, centerY, eventHorizonRadius);
+      horizonGradient.addColorStop(0, '#000000');
+      horizonGradient.addColorStop(0.9, '#000000');
+      horizonGradient.addColorStop(1, `rgba(100, 150, 255, ${0.3 + bassEnergy * 0.3})`);
+      
+      ctx2d.fillStyle = horizonGradient;
+      ctx2d.beginPath();
+      ctx2d.arc(centerX, centerY, eventHorizonRadius, 0, Math.PI * 2);
+      ctx2d.fill();
+      
+      // Hawking radiation (subtle particles near event horizon)
+      const radiationParticles = 20;
+      for (let i = 0; i < radiationParticles; i++) {
+        const angle = (i / radiationParticles) * Math.PI * 2 + Date.now() / 500;
+        const distance = eventHorizonRadius + Math.sin(Date.now() / 200 + i) * 5;
+        const x = centerX + Math.cos(angle) * distance;
+        const y = centerY + Math.sin(angle) * distance;
+        
+        const alpha = 0.2 + Math.sin(Date.now() / 100 + i) * 0.2 + highEnergy * 0.3;
+        ctx2d.fillStyle = `rgba(150, 200, 255, ${alpha})`;
+        ctx2d.shadowBlur = 5;
+        ctx2d.shadowColor = `rgba(150, 200, 255, ${alpha})`;
+        ctx2d.beginPath();
+        ctx2d.arc(x, y, 1 + highEnergy * 2, 0, Math.PI * 2);
+        ctx2d.fill();
+      }
+      
+      ctx2d.shadowBlur = 0;
+      
+      // Polar jets (matter ejected from poles)
+      if (totalEnergy > 0.2) {
+        const jetLength = 150 + totalEnergy * 100;
+        const jetWidth = 8 + bassEnergy * 12;
+        
+        // Top jet
+        const jetGradientTop = ctx2d.createLinearGradient(centerX, centerY - eventHorizonRadius, centerX, centerY - eventHorizonRadius - jetLength);
+        jetGradientTop.addColorStop(0, `rgba(100, 150, 255, ${0.6 + bassEnergy * 0.4})`);
+        jetGradientTop.addColorStop(0.5, `rgba(150, 200, 255, ${0.3 + midEnergy * 0.3})`);
+        jetGradientTop.addColorStop(1, 'rgba(200, 220, 255, 0)');
+        
+        ctx2d.strokeStyle = jetGradientTop;
+        ctx2d.lineWidth = jetWidth;
+        ctx2d.lineCap = 'round';
+        ctx2d.beginPath();
+        ctx2d.moveTo(centerX, centerY - eventHorizonRadius);
+        ctx2d.lineTo(centerX, centerY - eventHorizonRadius - jetLength);
+        ctx2d.stroke();
+        
+        // Bottom jet
+        const jetGradientBottom = ctx2d.createLinearGradient(centerX, centerY + eventHorizonRadius, centerX, centerY + eventHorizonRadius + jetLength);
+        jetGradientBottom.addColorStop(0, `rgba(100, 150, 255, ${0.6 + bassEnergy * 0.4})`);
+        jetGradientBottom.addColorStop(0.5, `rgba(150, 200, 255, ${0.3 + midEnergy * 0.3})`);
+        jetGradientBottom.addColorStop(1, 'rgba(200, 220, 255, 0)');
+        
+        ctx2d.strokeStyle = jetGradientBottom;
+        ctx2d.beginPath();
+        ctx2d.moveTo(centerX, centerY + eventHorizonRadius);
+        ctx2d.lineTo(centerX, centerY + eventHorizonRadius + jetLength);
+        ctx2d.stroke();
+      }
+      
+      // Frequency spectrum as gravitational wave ripples
+      const waveCount = 6;
+      for (let i = 0; i < waveCount; i++) {
+        const freqIndex = Math.floor((i / waveCount) * freqBuffer.length);
+        const freqValue = freqBuffer[freqIndex] / 255;
+        const waveRadius = diskOuterRadius * 1.2 + (i * 30) + freqValue * 20;
+        
+        ctx2d.strokeStyle = `rgba(100, 150, 200, ${freqValue * 0.2})`;
+        ctx2d.lineWidth = 1 + freqValue * 2;
+        ctx2d.beginPath();
+        ctx2d.arc(centerX, centerY, waveRadius, 0, Math.PI * 2);
+        ctx2d.stroke();
+      }
+      
+      // Display info
+      const mass = (totalEnergy * 100).toFixed(0);
+      const accretionRate = (bassEnergy * 100).toFixed(0);
+      ui.levelText.textContent = `Black Hole | Mass: ${mass}% | Accretion: ${accretionRate}% | Particles: ${state.blackholeParticles.length}`;
+    } else if (mode === 'wormhole') {
+      // WORMHOLE VISUALIZER
+      // Get frequency and time data
+      analyser.getByteFrequencyData(freqBuffer);
+      analyser.getByteTimeDomainData(waveBuffer);
+      
+      // Calculate energy metrics
+      let totalEnergy = 0;
+      let bassEnergy = 0;
+      let midEnergy = 0;
+      let highEnergy = 0;
+      
+      for (let i = 0; i < freqBuffer.length; i++) {
+        const normalized = freqBuffer[i] / 255;
+        totalEnergy += normalized;
+        
+        if (i < freqBuffer.length * 0.15) {
+          bassEnergy += normalized;
+        } else if (i < freqBuffer.length * 0.4) {
+          midEnergy += normalized;
+        } else {
+          highEnergy += normalized;
+        }
+      }
+      
+      totalEnergy /= freqBuffer.length;
+      bassEnergy /= (freqBuffer.length * 0.15);
+      midEnergy /= (freqBuffer.length * 0.25);
+      highEnergy /= (freqBuffer.length * 0.6);
+      
+      // Deep space background
+      ctx2d.fillStyle = '#000008';
+      ctx2d.fillRect(0, 0, w, h);
+      
+      const centerX = w / 2;
+      const centerY = h / 2;
+      const time = Date.now() / 1000;
+      
+      // Wormhole tunnel - concentric rings with perspective
+      const tunnelDepth = 30;
+      const maxRadius = Math.max(w, h) * 0.6;
+      
+      for (let i = 0; i < tunnelDepth; i++) {
+        const depth = i / tunnelDepth;
+        const depthEased = 1 - Math.pow(1 - depth, 2); // Ease out for perspective
+        
+        // Radius shrinks with depth (perspective)
+        const radius = maxRadius * (1 - depthEased * 0.9);
+        
+        // Rotation and distortion
+        const rotation = time * 0.5 + depth * Math.PI * 4 + totalEnergy * depth * 2;
+        const warp = Math.sin(time * 2 + depth * 10) * 0.1 * (1 + bassEnergy);
+        
+        // Color shifts through spectrum based on depth
+        const hue = (200 + depth * 80 + time * 20) % 360;
+        const saturation = 70 + depth * 30;
+        const lightness = 30 + depth * 40 + totalEnergy * 20;
+        const alpha = 0.15 + depth * 0.3 + (1 - depth) * totalEnergy * 0.4;
+        
+        // Draw ring with multiple segments for warp effect
+        const segments = 32;
+        ctx2d.strokeStyle = `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`;
+        ctx2d.lineWidth = 2 + (1 - depth) * 4 + bassEnergy * 3;
+        
+        ctx2d.beginPath();
+        for (let s = 0; s <= segments; s++) {
+          const angle = (s / segments) * Math.PI * 2 + rotation;
+          const warpOffset = Math.sin(angle * 4 + time * 3) * warp * radius * 0.2;
+          const r = radius + warpOffset;
+          const x = centerX + Math.cos(angle) * r;
+          const y = centerY + Math.sin(angle) * r;
+          
+          if (s === 0) ctx2d.moveTo(x, y);
+          else ctx2d.lineTo(x, y);
+        }
+        ctx2d.closePath();
+        ctx2d.stroke();
+        
+        // Add glow for inner rings
+        if (depth > 0.7) {
+          ctx2d.shadowBlur = 15 * (depth - 0.7) * (1 + totalEnergy);
+          ctx2d.shadowColor = `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`;
+          ctx2d.stroke();
+          ctx2d.shadowBlur = 0;
+        }
+      }
+      
+      // Energy ribbons spiraling through the tunnel
+      const ribbonCount = 8;
+      for (let r = 0; r < ribbonCount; r++) {
+        const ribbonPhase = (r / ribbonCount) * Math.PI * 2 + time;
+        const ribbonColor = (r / ribbonCount) * 360;
+        
+        ctx2d.strokeStyle = `hsla(${ribbonColor}, 80%, 60%, ${0.4 + midEnergy * 0.4})`;
+        ctx2d.lineWidth = 3 + midEnergy * 4;
+        ctx2d.lineCap = 'round';
+        
+        ctx2d.beginPath();
+        for (let d = 0; d < 50; d++) {
+          const depth = d / 50;
+          const depthEased = 1 - Math.pow(1 - depth, 2);
+          const radius = maxRadius * (1 - depthEased * 0.9);
+          const angle = ribbonPhase + depth * Math.PI * 6 + time * 2;
+          
+          const x = centerX + Math.cos(angle) * radius * (0.3 + depth * 0.7);
+          const y = centerY + Math.sin(angle) * radius * (0.3 + depth * 0.7);
+          
+          if (d === 0) ctx2d.moveTo(x, y);
+          else ctx2d.lineTo(x, y);
+        }
+        ctx2d.stroke();
+      }
+      
+      // Particles flowing through the wormhole
+      if (!state.wormholeParticles || state.wormholeParticles.length === 0) {
+        state.wormholeParticles = [];
+        for (let i = 0; i < 150; i++) {
+          state.wormholeParticles.push({
+            depth: Math.random(),
+            angle: Math.random() * Math.PI * 2,
+            speed: 0.3 + Math.random() * 0.7,
+            size: 1 + Math.random() * 2,
+            hue: Math.random() * 360
+          });
+        }
+      }
+      
+      state.wormholeParticles.forEach(particle => {
+        // Move particle through tunnel
+        particle.depth += particle.speed * 0.01 * (1 + totalEnergy * 2);
+        particle.angle += 0.02 + particle.depth * 0.1;
+        
+        // Reset if particle exits
+        if (particle.depth > 1) {
+          particle.depth = 0;
+          particle.angle = Math.random() * Math.PI * 2;
+          particle.hue = Math.random() * 360;
+        }
+        
+        // Calculate position with perspective
+        const depthEased = 1 - Math.pow(1 - particle.depth, 2);
+        const radius = maxRadius * (1 - depthEased * 0.9) * (0.2 + Math.random() * 0.6);
+        const x = centerX + Math.cos(particle.angle) * radius;
+        const y = centerY + Math.sin(particle.angle) * radius;
+        
+        // Size and brightness based on depth (closer = bigger/brighter)
+        const scale = 0.2 + particle.depth * 0.8;
+        const alpha = 0.3 + particle.depth * 0.7;
+        
+        ctx2d.fillStyle = `hsla(${particle.hue}, 80%, 70%, ${alpha})`;
+        ctx2d.shadowBlur = 5 * scale * (1 + highEnergy);
+        ctx2d.shadowColor = `hsla(${particle.hue}, 80%, 70%, ${alpha})`;
+        ctx2d.beginPath();
+        ctx2d.arc(x, y, particle.size * scale, 0, Math.PI * 2);
+        ctx2d.fill();
+      });
+      
+      ctx2d.shadowBlur = 0;
+      
+      // Gravitational distortion waves
+      const distortionWaves = 6;
+      for (let i = 0; i < distortionWaves; i++) {
+        const wavePhase = (time * 2 + i * Math.PI / 3) % (Math.PI * 2);
+        const waveRadius = (Math.sin(wavePhase) * 0.5 + 0.5) * maxRadius * 0.8;
+        
+        if (waveRadius > maxRadius * 0.1) {
+          const alpha = (Math.sin(wavePhase) * 0.5 + 0.5) * 0.3 * (1 + bassEnergy * 0.5);
+          ctx2d.strokeStyle = `rgba(150, 200, 255, ${alpha})`;
+          ctx2d.lineWidth = 2;
+          ctx2d.beginPath();
+          ctx2d.arc(centerX, centerY, waveRadius, 0, Math.PI * 2);
+          ctx2d.stroke();
+        }
+      }
+      
+      // Central singularity point (entrance/exit)
+      const singularityRadius = 15 + bassEnergy * 20;
+      const singularityGradient = ctx2d.createRadialGradient(centerX, centerY, 0, centerX, centerY, singularityRadius);
+      singularityGradient.addColorStop(0, `rgba(255, 255, 255, ${0.9 + totalEnergy * 0.1})`);
+      singularityGradient.addColorStop(0.4, `rgba(200, 230, 255, ${0.7 + midEnergy * 0.3})`);
+      singularityGradient.addColorStop(1, 'rgba(100, 150, 255, 0)');
+      
+      ctx2d.fillStyle = singularityGradient;
+      ctx2d.beginPath();
+      ctx2d.arc(centerX, centerY, singularityRadius, 0, Math.PI * 2);
+      ctx2d.fill();
+      
+      // Frequency visualization as outer vortex arms
+      const armCount = 4;
+      for (let a = 0; a < armCount; a++) {
+        const armAngle = (a / armCount) * Math.PI * 2 + time * 0.5;
+        const freqIndex = Math.floor((a / armCount) * freqBuffer.length);
+        const freqValue = freqBuffer[freqIndex] / 255;
+        
+        ctx2d.strokeStyle = `hsla(${200 + a * 30}, 70%, 60%, ${freqValue * 0.5})`;
+        ctx2d.lineWidth = 2 + freqValue * 4;
+        ctx2d.lineCap = 'round';
+        
+        ctx2d.beginPath();
+        for (let i = 0; i < 20; i++) {
+          const t = i / 20;
+          const spiral = armAngle + t * Math.PI * 3;
+          const r = maxRadius * 0.9 * t + freqValue * 30;
+          const x = centerX + Math.cos(spiral) * r;
+          const y = centerY + Math.sin(spiral) * r;
+          
+          if (i === 0) ctx2d.moveTo(x, y);
+          else ctx2d.lineTo(x, y);
+        }
+        ctx2d.stroke();
+      }
+      
+      // Display info
+      const stability = (100 - totalEnergy * 100).toFixed(0);
+      ui.levelText.textContent = `Wormhole | Stability: ${stability}% | Energy Flux: ${(totalEnergy * 100).toFixed(0)}% | Particles: ${state.wormholeParticles.length}`;
     } else {
       // waveform (default)
       // grid
@@ -8894,6 +11098,40 @@ function applyParams() {
   const cutoff = Number(ui.cutoff.value);
   state.filterNode.frequency.setTargetAtTime(cutoff, state.audioContext.currentTime, 0.015);
 
+  // Apply EQ parameters if EQ nodes exist
+  if (state.eqBassNode) {
+    state.eqBassNode.gain.setTargetAtTime(Number(ui.eqBass.value), state.audioContext.currentTime, 0.015);
+  }
+  if (state.eqLowMidNode) {
+    state.eqLowMidNode.gain.setTargetAtTime(Number(ui.eqLowMid.value), state.audioContext.currentTime, 0.015);
+  }
+  if (state.eqMidNode) {
+    state.eqMidNode.gain.setTargetAtTime(Number(ui.eqMid.value), state.audioContext.currentTime, 0.015);
+  }
+  if (state.eqHighMidNode) {
+    state.eqHighMidNode.gain.setTargetAtTime(Number(ui.eqHighMid.value), state.audioContext.currentTime, 0.015);
+  }
+  if (state.eqTrebleNode) {
+    state.eqTrebleNode.gain.setTargetAtTime(Number(ui.eqTreble.value), state.audioContext.currentTime, 0.015);
+  }
+  
+  // Apply smoothing filter
+  if (state.smoothingFilterNode) {
+    const smoothAmount = Number(ui.smoothing.value) / 100;
+    if (smoothAmount === 0) {
+      // Full bypass - set to max frequency
+      state.smoothingFilterNode.frequency.setTargetAtTime(20000, state.audioContext.currentTime, 0.015);
+      state.smoothingFilterNode.Q.setTargetAtTime(0.7, state.audioContext.currentTime, 0.015);
+    } else {
+      // Map 1-100% to frequency range 12000Hz down to 800Hz
+      const freq = 12000 - (smoothAmount * 11200);
+      state.smoothingFilterNode.frequency.setTargetAtTime(freq, state.audioContext.currentTime, 0.015);
+      // Increase resonance slightly for more smoothing effect
+      const q = 0.7 + (smoothAmount * 2.0);
+      state.smoothingFilterNode.Q.setTargetAtTime(q, state.audioContext.currentTime, 0.015);
+    }
+  }
+
   const preset = SOUND_PRESETS[ui.sound.value] || SOUND_PRESETS.brown;
   if (preset.kind === 'noise' && state.sourceController && state.sourceController.setNoiseType) {
     state.sourceController.setNoiseType(preset.noiseType);
@@ -8908,7 +11146,7 @@ function applyParams() {
     state.sourceController.setLoop(ui.loopSong.checked);
   }
   if (preset.kind === 'demo' && state.sourceController && state.sourceController.setMelody) {
-    state.sourceController.setMelody(ui.melody.value);
+    state.sourceController.setMelody(70); // Fixed at 70%
   }
 
   uiSync();
@@ -8936,9 +11174,23 @@ async function start() {
     await state.audioContext.resume();
   }
 
-  // Start transport for demo sources
-  if (state.sourceController && state.sourceController.startTransport) {
-    state.sourceController.startTransport();
+  // Start custom song if one is selected (exclusive mode)
+  if (state.currentSong && !state.songPlayback.isPlaying) {
+    // Mute background sound when playing custom song
+    if (state.gainNode) {
+      state.gainNode.gain.value = 0;
+    }
+    startSongPlayback();
+  } else {
+    // Start transport for demo sources only if no custom song
+    if (state.sourceController && state.sourceController.startTransport) {
+      state.sourceController.startTransport();
+    }
+    // Ensure background sound is audible
+    if (state.gainNode) {
+      const volume = parseFloat(ui.volume.value) / 100;
+      state.gainNode.gain.value = volume;
+    }
   }
 
   state.running = true;
@@ -8958,6 +11210,9 @@ async function stop() {
     state.sourceController.stopTransport();
   }
 
+  // Stop custom song playback
+  stopSongPlayback();
+
   // Suspend instead of closing so "Start" is instant.
   if (state.audioContext.state === 'running') {
     await state.audioContext.suspend();
@@ -8971,6 +11226,7 @@ async function panic() {
   try {
     state.running = false;
     stopVisualizer();
+    stopSongPlayback();
 
     disconnectGraph();
 
@@ -9008,32 +11264,252 @@ ui.panicBtn.addEventListener('click', async () => {
 
 ui.volume.addEventListener('input', applyParams);
 ui.masterVolume.addEventListener('input', applyParams);
-ui.brownNoiseEnable.addEventListener('change', applyParams);
+ui.brownNoiseEnable.addEventListener('change', () => {
+  uiSync();
+  applyParams();
+});
 ui.brownNoiseMix.addEventListener('input', applyParams);
 ui.cutoff.addEventListener('input', applyParams);
 
-ui.frequency.addEventListener('input', applyParams);
-ui.bpm.addEventListener('input', applyParams);
-ui.loopSong.addEventListener('change', applyParams);
-ui.melody.addEventListener('input', applyParams);
-
-ui.sound.addEventListener('change', async () => {
+// EQ event listeners
+ui.eqEnable.addEventListener('change', async () => {
   uiSync();
   if (!state.audioContext) return;
+  // Rebuild graph to apply/bypass EQ chain
   try {
-    await buildGraph();
-    if (state.running && state.audioContext.state !== 'running') {
-      await state.audioContext.resume();
+    if (state.running) {
+      stopVisualizer();
     }
-    ensureVisualizerRunning();
+    await buildGraph();
+    if (state.running) {
+      if (state.audioContext.state !== 'running') {
+        await state.audioContext.resume();
+      }
+      if (state.sourceController && state.sourceController.startTransport) {
+        state.sourceController.startTransport();
+      }
+      ensureVisualizerRunning();
+    }
   } catch (err) {
     console.error(err);
     setStatus(`Error: ${err && err.message ? err.message : String(err)}`);
   }
 });
 
+ui.eqBass.addEventListener('input', () => {
+  ui.eqPreset.value = ''; // Set to Custom when manually adjusted
+  applyParams();
+});
+ui.eqLowMid.addEventListener('input', () => {
+  ui.eqPreset.value = '';
+  applyParams();
+});
+ui.eqMid.addEventListener('input', () => {
+  ui.eqPreset.value = '';
+  applyParams();
+});
+ui.eqHighMid.addEventListener('input', () => {
+  ui.eqPreset.value = '';
+  applyParams();
+});
+ui.eqTreble.addEventListener('input', () => {
+  ui.eqPreset.value = '';
+  applyParams();
+});
+
+ui.eqPreset.addEventListener('change', () => {
+  if (ui.eqPreset.value) {
+    applyEQPreset(ui.eqPreset.value);
+  }
+});
+
+ui.eqSavePresetBtn.addEventListener('click', () => {
+  const name = prompt('Enter preset name:');
+  if (!name || !name.trim()) return;
+  
+  const trimmedName = name.trim();
+  if (DEFAULT_EQ_PRESETS[trimmedName]) {
+    alert('Cannot overwrite default presets. Please choose a different name.');
+    return;
+  }
+  
+  saveEQPreset(trimmedName, getCurrentEQSettings());
+  ui.eqPreset.value = trimmedName;
+  alert(`Preset "${trimmedName}" saved!`);
+});
+
+ui.eqDeletePresetBtn.addEventListener('click', () => {
+  const currentPreset = ui.eqPreset.value;
+  if (!currentPreset) {
+    alert('No preset selected to delete.');
+    return;
+  }
+  
+  if (DEFAULT_EQ_PRESETS[currentPreset]) {
+    alert('Cannot delete default presets.');
+    return;
+  }
+  
+  if (confirm(`Delete preset "${currentPreset}"?`)) {
+    deleteEQPreset(currentPreset);
+    ui.eqPreset.value = '';
+    alert(`Preset "${currentPreset}" deleted.`);
+  }
+});
+
+ui.eqResetBtn.addEventListener('click', () => {
+  ui.eqBass.value = '0';
+  ui.eqLowMid.value = '0';
+  ui.eqMid.value = '0';
+  ui.eqHighMid.value = '0';
+  ui.eqTreble.value = '0';
+  ui.eqPreset.value = '';
+  applyParams();
+});
+
+ui.frequency.addEventListener('input', applyParams);
+ui.bpm.addEventListener('input', applyParams);
+ui.loopSong.addEventListener('change', applyParams);
+
+ui.sound.addEventListener('change', async () => {
+  uiSync();
+  if (!state.audioContext) return;
+  try {
+    // Stop any playing song
+    stopSongPlayback();
+    
+    // Stop visualizer before rebuilding graph
+    if (state.running) {
+      stopVisualizer();
+    }
+    
+    await buildGraph();
+    
+    if (state.running) {
+      if (state.audioContext.state !== 'running') {
+        await state.audioContext.resume();
+      }
+      // Start transport for demo sources after graph rebuild
+      if (state.sourceController && state.sourceController.startTransport) {
+        state.sourceController.startTransport();
+      }
+      // Restart visualizer with new graph
+      ensureVisualizerRunning();
+    }
+  } catch (err) {
+    console.error(err);
+    setStatus(`Error: ${err && err.message ? err.message : String(err)}`);
+  }
+});
+
+// Custom song controls
+ui.customSong.addEventListener('change', async () => {
+  const songId = ui.customSong.value;
+  
+  if (!songId) {
+    state.currentSong = null;
+    ui.songStatusText.textContent = 'No song selected';
+    ui.songBpmControl.classList.add('hidden');
+    stopSongPlayback();
+    
+    // Resume background sound if audio is running
+    if (state.running && state.audioContext && state.gainNode) {
+      const volume = parseFloat(ui.volume.value) / 100;
+      state.gainNode.gain.value = volume;
+      
+      // Restart transport for background sounds
+      if (state.sourceController && state.sourceController.startTransport) {
+        state.sourceController.startTransport();
+      }
+    }
+    return;
+  }
+  
+  const song = state.customSongs[songId];
+  if (!song) return;
+  
+  state.currentSong = song;
+  ui.songStatusText.textContent = song.songInfo.description || song.songInfo.title;
+  ui.songBpmControl.classList.remove('hidden');
+  
+  // Set BPM from song metadata
+  if (song.songInfo.bpm) {
+    ui.songBpm.value = song.songInfo.bpm;
+    state.songPlayback.songBpm = song.songInfo.bpm;
+    ui.songBpmVal.textContent = song.songInfo.bpm;
+  }
+  
+  // If audio is running, mute background and start song
+  if (state.running && state.audioContext) {
+    // Mute background sound
+    if (state.gainNode) {
+      state.gainNode.gain.value = 0;
+    }
+    
+    // Stop background transport
+    if (state.sourceController && state.sourceController.stopTransport) {
+      state.sourceController.stopTransport();
+    }
+    
+    stopSongPlayback();
+    // Small delay to ensure previous notes are stopped
+    setTimeout(() => startSongPlayback(), 100);
+  }
+});
+
+ui.songBpm.addEventListener('input', () => {
+  const bpm = parseInt(ui.songBpm.value);
+  state.songPlayback.songBpm = bpm;
+  ui.songBpmVal.textContent = bpm;
+  
+  // If song is playing, restart with new BPM
+  if (state.songPlayback.isPlaying && state.currentSong) {
+    stopSongPlayback();
+    setTimeout(() => startSongPlayback(), 50);
+  }
+});
+
 ui.vizMode.addEventListener('change', () => {
   uiSync();
+});
+
+ui.smoothing.addEventListener('input', () => {
+  applyParams();
+});
+
+// Favorites
+ui.favorites.addEventListener('change', () => {
+  const key = ui.favorites.value;
+  if (key) {
+    ui.sound.value = key;
+    ui.sound.dispatchEvent(new Event('change'));
+    // Reset to placeholder
+    ui.favorites.value = '';
+  }
+});
+
+ui.addFavoriteBtn.addEventListener('click', () => {
+  const currentSound = ui.sound.value;
+  if (currentSound) {
+    addFavorite(currentSound);
+    console.log(`Added "${SOUND_PRESETS[currentSound]?.label || currentSound}" to favorites`);
+  }
+});
+
+ui.removeFavoriteBtn.addEventListener('click', () => {
+  const selectedFavorite = ui.favorites.value;
+  if (selectedFavorite) {
+    removeFavorite(selectedFavorite);
+    console.log(`Removed from favorites`);
+  } else {
+    // If nothing selected in favorites, try removing current sound
+    const currentSound = ui.sound.value;
+    const favorites = getFavorites();
+    if (favorites.includes(currentSound)) {
+      removeFavorite(currentSound);
+      console.log(`Removed "${SOUND_PRESETS[currentSound]?.label || currentSound}" from favorites`);
+    }
+  }
 });
 
 // Theme management
@@ -9046,6 +11522,170 @@ function loadSavedTheme() {
   const saved = localStorage.getItem('noisemaker-theme') || 'dark';
   ui.themeSelector.value = saved;
   applyTheme(saved);
+}
+
+// EQ Preset management
+function getEQPresets() {
+  const saved = localStorage.getItem('noisemaker-eq-presets');
+  const userPresets = saved ? JSON.parse(saved) : {};
+  return { ...DEFAULT_EQ_PRESETS, ...userPresets };
+}
+
+function saveEQPreset(name, preset) {
+  const saved = localStorage.getItem('noisemaker-eq-presets');
+  const userPresets = saved ? JSON.parse(saved) : {};
+  userPresets[name] = preset;
+  localStorage.setItem('noisemaker-eq-presets', JSON.stringify(userPresets));
+  loadEQPresets();
+}
+
+function deleteEQPreset(name) {
+  // Can't delete default presets
+  if (DEFAULT_EQ_PRESETS[name]) return;
+  
+  const saved = localStorage.getItem('noisemaker-eq-presets');
+  const userPresets = saved ? JSON.parse(saved) : {};
+  delete userPresets[name];
+  localStorage.setItem('noisemaker-eq-presets', JSON.stringify(userPresets));
+  loadEQPresets();
+}
+
+function loadEQPresets() {
+  const presets = getEQPresets();
+  const currentValue = ui.eqPreset.value;
+  
+  // Clear and rebuild preset dropdown
+  ui.eqPreset.innerHTML = '<option value="">Custom</option>';
+  
+  // Add default presets
+  Object.keys(DEFAULT_EQ_PRESETS).forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    ui.eqPreset.appendChild(opt);
+  });
+  
+  // Add separator if there are user presets
+  const saved = localStorage.getItem('noisemaker-eq-presets');
+  const userPresets = saved ? JSON.parse(saved) : {};
+  if (Object.keys(userPresets).length > 0) {
+    const separator = document.createElement('option');
+    separator.disabled = true;
+    separator.textContent = '─────────';
+    ui.eqPreset.appendChild(separator);
+    
+    // Add user presets
+    Object.keys(userPresets).forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = `★ ${name}`;
+      ui.eqPreset.appendChild(opt);
+    });
+  }
+  
+  // Restore selection if still valid
+  if (currentValue && presets[currentValue]) {
+    ui.eqPreset.value = currentValue;
+  } else {
+    ui.eqPreset.value = '';
+  }
+}
+
+function applyEQPreset(name) {
+  const presets = getEQPresets();
+  const preset = presets[name];
+  if (!preset) return;
+  
+  ui.eqBass.value = String(preset.bass);
+  ui.eqLowMid.value = String(preset.lowMid);
+  ui.eqMid.value = String(preset.mid);
+  ui.eqHighMid.value = String(preset.highMid);
+  ui.eqTreble.value = String(preset.treble);
+  ui.cutoff.value = String(preset.cutoff);
+  
+  applyParams();
+}
+
+function getCurrentEQSettings() {
+  return {
+    bass: Number(ui.eqBass.value),
+    lowMid: Number(ui.eqLowMid.value),
+    mid: Number(ui.eqMid.value),
+    highMid: Number(ui.eqHighMid.value),
+    treble: Number(ui.eqTreble.value),
+    cutoff: Number(ui.cutoff.value),
+  };
+}
+
+// =======================================
+// FAVORITES MANAGEMENT
+// =======================================
+
+function getFavorites() {
+  try {
+    const stored = localStorage.getItem('soundFavorites');
+    return stored ? JSON.parse(stored) : [];
+  } catch (err) {
+    console.warn('Failed to load favorites:', err);
+    return [];
+  }
+}
+
+function saveFavorites(favorites) {
+  try {
+    localStorage.setItem('soundFavorites', JSON.stringify(favorites));
+  } catch (err) {
+    console.warn('Failed to save favorites:', err);
+  }
+}
+
+function addFavorite(soundKey) {
+  const favorites = getFavorites();
+  if (!favorites.includes(soundKey)) {
+    favorites.push(soundKey);
+    saveFavorites(favorites);
+    loadFavorites();
+  }
+}
+
+function removeFavorite(soundKey) {
+  const favorites = getFavorites();
+  const filtered = favorites.filter(key => key !== soundKey);
+  saveFavorites(filtered);
+  loadFavorites();
+}
+
+function loadFavorites() {
+  const favorites = getFavorites();
+  ui.favorites.innerHTML = '';
+  
+  if (favorites.length === 0) {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.disabled = true;
+    opt.selected = true;
+    opt.textContent = 'No favorites yet';
+    ui.favorites.appendChild(opt);
+  } else {
+    // Add placeholder option
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.disabled = true;
+    placeholder.selected = true;
+    placeholder.textContent = 'Select a favorite';
+    ui.favorites.appendChild(placeholder);
+    
+    // Add favorite options
+    favorites.forEach(key => {
+      const preset = SOUND_PRESETS[key];
+      if (preset) {
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = preset.label;
+        ui.favorites.appendChild(opt);
+      }
+    });
+  }
 }
 
 ui.themeSelector.addEventListener('change', () => {
@@ -9061,6 +11701,9 @@ document.addEventListener('visibilitychange', () => {
 
 // Initial UI
 loadSavedTheme();
+loadEQPresets();
+loadFavorites();
+loadCustomSongs(); // Load custom songs from songs folder
 updateSecureContextBadge();
 setStatus('Idle');
 uiSync();
