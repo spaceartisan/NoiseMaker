@@ -13,6 +13,22 @@
   --gradient2: rgba(52,211,153,0.14);
 }
 
+/* Black Mode - Maximum Black */
+[data-theme="black"] {
+  --bg: #000000;
+  --card: #0a0a0a;
+  --card2: #050505;
+  --text: #666666;
+  --muted: #444444;
+  --border: rgba(255,255,255,0.08);
+  --accent: #888888;
+  --accent2: #777777;
+  --danger: #ff4444;
+  --shadow: 0 20px 50px rgba(0,0,0,0.9);
+  --gradient1: rgba(255,255,255,0.03);
+  --gradient2: rgba(255,255,255,0.02);
+}
+
 /* Light Mode */
 [data-theme="light"] {
   --bg: #f9fafb;
@@ -254,6 +270,22 @@
   --gradient2: rgba(255,182,217,0.10);
 }
 
+/* The Witcher - Wolf School */
+[data-theme="witcher"] {
+  --bg: #1a1612;
+  --card: #2a241e;
+  --card2: #1f1b17;
+  --text: #c8baa4;
+  --muted: #8a7f6f;
+  --border: rgba(200, 186, 164, 0.25);
+  --accent: #d4a853;
+  --accent2: #b8bfc7;
+  --danger: #8b1a1a;
+  --shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(212,168,83,0.1);
+  --gradient1: rgba(212,168,83,0.15);
+  --gradient2: rgba(184,191,199,0.10);
+}
+
 * { box-sizing: border-box; }
 
 html, body {
@@ -273,6 +305,145 @@ html, body {
   background: radial-gradient(1200px 600px at 20% 0%, var(--gradient1), transparent 60%),
               radial-gradient(900px 500px at 80% 10%, var(--gradient2), transparent 55%),
               var(--bg);
+}
+
+/* Black mode - pure black with minimal texture */
+[data-theme="black"] body,
+[data-theme="black"] html {
+  background: #000000;
+}
+
+/* Black mode - ultra minimalist styling */
+[data-theme="black"] {
+  font-family: monospace;
+}
+
+[data-theme="black"] .card {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+[data-theme="black"] .card::before {
+  display: none;
+}
+
+[data-theme="black"] .btn {
+  border: 1px solid var(--text);
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  transition: none;
+}
+
+[data-theme="black"] .btn:hover {
+  background: transparent;
+  box-shadow: none;
+  border-color: var(--muted);
+}
+
+[data-theme="black"] .btn-primary {
+  border-color: var(--text);
+  background: transparent;
+  box-shadow: none;
+}
+
+[data-theme="black"] .btn-primary:hover {
+  background: transparent;
+  border-color: var(--muted);
+}
+
+[data-theme="black"] select,
+[data-theme="black"] input,
+[data-theme="black"] textarea {
+  border: none;
+  border-bottom: 1px solid var(--text);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+[data-theme="black"] input[type="range"] {
+  background: transparent;
+}
+
+[data-theme="black"] input[type="range"]::-webkit-slider-track {
+  background: var(--text);
+  border: none;
+  box-shadow: none;
+  height: 1px;
+}
+
+[data-theme="black"] input[type="range"]::-webkit-slider-thumb {
+  background: var(--text);
+  border: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+[data-theme="black"] input[type="range"]::-moz-range-track {
+  background: var(--text);
+  border: none;
+  box-shadow: none;
+  height: 1px;
+}
+
+[data-theme="black"] input[type="range"]::-moz-range-thumb {
+  background: var(--text);
+  border: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+[data-theme="black"] .kv {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+[data-theme="black"] .k {
+  border-right: 1px solid var(--text);
+}
+
+[data-theme="black"] .badge {
+  border: 1px solid var(--text);
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+[data-theme="black"] .pill {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+[data-theme="black"] canvas {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+[data-theme="black"] .header {
+  box-shadow: none;
+  border: none;
+}
+
+[data-theme="black"] h1,
+[data-theme="black"] h2 {
+  font-weight: 400;
+  text-shadow: none;
+  border: none;
+}
+
+[data-theme="black"] h2 {
+  border-bottom: 1px solid var(--text);
 }
 
 /* Light mode - clean paper with subtle texture */
@@ -492,6 +663,385 @@ html, body {
     linear-gradient(180deg, #ffe4f0, #ffd4e5);
   background-size: 200px 200px, 200px 200px, 200px 200px, 200px 200px, 200px 200px, 200px 200px, 200px 200px, 200px 200px, 200px 200px, 200px 200px, 100% 100%;
   font-family: 'Georgia', 'Palatino', 'Times New Roman', serif;
+}
+
+/* Witcher mode - dark medieval atmosphere with medallion glow */
+[data-theme="witcher"] body,
+[data-theme="witcher"] html {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      rgba(201,184,150,0.01) 1px,
+      transparent 2px,
+      transparent 80px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      rgba(139,125,107,0.015) 1px,
+      transparent 2px,
+      transparent 60px
+    ),
+    radial-gradient(ellipse at 50% 20%, rgba(244,208,63,0.08), transparent 40%),
+    radial-gradient(ellipse at 30% 70%, rgba(201,184,150,0.05), transparent 50%),
+    radial-gradient(circle at 50% 50%, transparent 30%, rgba(0,0,0,0.4) 100%),
+    linear-gradient(180deg, #0a0806, #0f0d0a, #1a1612);
+  animation: none;
+  font-family: Georgia, 'Times New Roman', serif;
+  position: relative;
+}
+
+[data-theme="witcher"] html {
+  overflow-x: hidden;
+}
+
+/* Large Witcher symbol background */
+[data-theme="witcher"] body::before {
+  content: '';
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 1200px;
+  height: 1200px;
+  background-image: url('img/witcher.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.08;
+  filter: drop-shadow(0 0 40px rgba(244,208,63,0.2));
+  pointer-events: none;
+  z-index: 0;
+  animation: medallion-glow 4s ease-in-out infinite;
+}
+
+/* Snow effect - layer 1 */
+[data-theme="witcher"] body::after {
+  content: '';
+  position: fixed;
+  top: -100%;
+  left: 0;
+  width: 100%;
+  height: 200%;
+  background-image: 
+    radial-gradient(2px 2px at 20% 30%, white, transparent),
+    radial-gradient(2px 2px at 60% 70%, white, transparent),
+    radial-gradient(1px 1px at 50% 50%, white, transparent),
+    radial-gradient(1px 1px at 80% 10%, white, transparent),
+    radial-gradient(2px 2px at 90% 60%, white, transparent),
+    radial-gradient(1px 1px at 33% 80%, white, transparent),
+    radial-gradient(2px 2px at 70% 40%, white, transparent);
+  background-size: 200px 200px, 300px 300px, 150px 150px, 250px 250px, 350px 350px, 180px 180px, 220px 220px;
+  background-position: 0 0, 40px 60px, 130px 270px, 70px 100px, 150px 50px, 200px 150px, 90px 200px;
+  animation: snowfall 20s linear infinite;
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes snowfall {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(100%); }
+}
+
+/* Ensure content is above snow */
+[data-theme="witcher"] .container,
+[data-theme="witcher"] .header,
+[data-theme="witcher"] .card {
+  position: relative;
+  z-index: 2;
+}
+
+@keyframes witcher-pulse {
+  0%, 100% { filter: brightness(1.0); }
+  50% { filter: brightness(1.05); }
+}
+
+/* Snow effect - layer 2 - using html::before instead */
+[data-theme="witcher"] html::before {
+  content: '';
+  position: fixed;
+  top: -100%;
+  left: 0;
+  width: 100%;
+  height: 200%;
+  background-image: 
+    radial-gradient(1px 1px at 10% 20%, white, transparent),
+    radial-gradient(1px 1px at 40% 80%, white, transparent),
+    radial-gradient(2px 2px at 75% 50%, white, transparent),
+    radial-gradient(1px 1px at 25% 60%, white, transparent),
+    radial-gradient(1px 1px at 95% 30%, white, transparent);
+  background-size: 280px 280px, 180px 180px, 320px 320px, 240px 240px, 160px 160px;
+  background-position: 20px 30px, 110px 140px, 50px 90px, 180px 70px, 240px 180px;
+  animation: snowfall 15s linear infinite;
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Witcher h1 decoration */
+[data-theme="witcher"] h1::before {
+  content: '⚔ ';
+  color: var(--accent2);
+  text-shadow: 0 0 10px var(--accent2);
+  animation: medallion-glow 3s ease-in-out infinite;
+}
+
+[data-theme="witcher"] h1::after {
+  content: ' ⚔';
+  color: var(--accent2);
+  text-shadow: 0 0 10px var(--accent2);
+  animation: medallion-glow 3s ease-in-out infinite;
+}
+
+@keyframes medallion-glow {
+  0%, 100% { 
+    text-shadow: 0 0 10px var(--accent2);
+    opacity: 0.8;
+  }
+  50% { 
+    text-shadow: 0 0 20px var(--accent2), 0 0 30px var(--accent2);
+    opacity: 1;
+  }
+}
+
+[data-theme="witcher"] .card {
+  background:
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 3px,
+      rgba(201,184,150,0.02) 3px,
+      rgba(201,184,150,0.02) 6px
+    ),
+    linear-gradient(135deg, 
+      rgba(26, 22, 18, 0.9) 0%, 
+      rgba(36, 32, 26, 0.8) 100%);
+  border: 3px solid;
+  border-color: rgba(201,184,150,0.5) rgba(139,125,107,0.4) rgba(139,125,107,0.4) rgba(201,184,150,0.5);
+  border-radius: 0;
+  box-shadow: 
+    0 0 20px rgba(0,0,0,0.6),
+    inset 0 0 30px rgba(244,208,63,0.03),
+    inset -3px -3px 0 rgba(0,0,0,0.4),
+    inset 3px 3px 0 rgba(201,184,150,0.15),
+    0 2px 0 rgba(0,0,0,0.3);
+  clip-path: polygon(
+    0 10px, 3px 8px, 10px 0,
+    calc(100% - 10px) 0, calc(100% - 3px) 8px, 100% 10px,
+    100% calc(100% - 10px), calc(100% - 3px) calc(100% - 8px), calc(100% - 10px) 100%,
+    10px 100%, 3px calc(100% - 8px), 0 calc(100% - 10px)
+  );
+  position: relative;
+}
+
+[data-theme="witcher"] .btn {
+  border: 3px solid;
+  border-color: var(--accent) rgba(139,125,107,0.8) rgba(139,125,107,0.8) var(--accent);
+  border-radius: 0;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 1px,
+      rgba(0,0,0,0.05) 1px,
+      rgba(0,0,0,0.05) 2px
+    ),
+    rgba(26, 22, 18, 0.8);
+  box-shadow: 
+    0 4px 12px rgba(0,0,0,0.5),
+    inset -2px -2px 0 rgba(0,0,0,0.5),
+    inset 2px 2px 0 rgba(201,184,150,0.2),
+    0 1px 0 rgba(0,0,0,0.4);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  clip-path: polygon(
+    0 5px, 2px 3px, 5px 0,
+    calc(100% - 5px) 0, calc(100% - 2px) 3px, 100% 5px,
+    100% calc(100% - 5px), calc(100% - 2px) calc(100% - 3px), calc(100% - 5px) 100%,
+    5px 100%, 2px calc(100% - 3px), 0 calc(100% - 5px)
+  );
+}
+
+[data-theme="witcher"] .btn:hover {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 1px,
+      rgba(244,208,63,0.05) 1px,
+      rgba(244,208,63,0.05) 2px
+    ),
+    rgba(36, 32, 26, 0.9);
+  border-color: var(--accent2) rgba(201,184,150,0.6) rgba(201,184,150,0.6) var(--accent2);
+  box-shadow: 
+    0 4px 12px rgba(0,0,0,0.5),
+    0 0 15px rgba(244,208,63,0.3),
+    inset -2px -2px 0 rgba(0,0,0,0.5),
+    inset 2px 2px 0 rgba(244,208,63,0.3),
+    0 1px 0 rgba(244,208,63,0.2);
+}
+
+[data-theme="witcher"] .btn-primary {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 1px,
+      rgba(0,0,0,0.05) 1px,
+      rgba(0,0,0,0.05) 2px
+    ),
+    linear-gradient(135deg, 
+      rgba(201,184,150,0.2) 0%, 
+      rgba(244,208,63,0.15) 100%);
+  border-color: var(--accent2) rgba(201,184,150,0.6) rgba(201,184,150,0.6) var(--accent2);
+  border-width: 3px;
+  box-shadow: 
+    0 4px 12px rgba(0,0,0,0.5),
+    0 0 15px rgba(244,208,63,0.2),
+    inset -2px -2px 0 rgba(0,0,0,0.5),
+    inset 2px 2px 0 rgba(244,208,63,0.3),
+    0 1px 0 rgba(244,208,63,0.15);
+}
+
+[data-theme="witcher"] .btn-primary:hover {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 1px,
+      rgba(244,208,63,0.05) 1px,
+      rgba(244,208,63,0.05) 2px
+    ),
+    linear-gradient(135deg, 
+      rgba(201,184,150,0.3) 0%, 
+      rgba(244,208,63,0.25) 100%);
+  box-shadow: 
+    0 4px 12px rgba(0,0,0,0.5),
+    0 0 20px rgba(244,208,63,0.4),
+    inset -2px -2px 0 rgba(0,0,0,0.6),
+    inset 2px 2px 0 rgba(244,208,63,0.4),
+    0 1px 0 rgba(244,208,63,0.3);
+}
+
+[data-theme="witcher"] canvas {
+  border: 3px solid;
+  border-color: rgba(201,184,150,0.5) rgba(139,125,107,0.4) rgba(139,125,107,0.4) rgba(201,184,150,0.5);
+  border-radius: 0;
+  box-shadow: 
+    0 0 20px rgba(0,0,0,0.6),
+    inset 0 0 30px rgba(244,208,63,0.05),
+    inset -3px -3px 0 rgba(0,0,0,0.4),
+    inset 3px 3px 0 rgba(201,184,150,0.15);
+}
+
+/* Dropdown and select styling */
+[data-theme="witcher"] select,
+[data-theme="witcher"] .dropdown,
+[data-theme="witcher"] option {
+  border: 3px solid;
+  border-color: rgba(201,184,150,0.5) rgba(139,125,107,0.4) rgba(139,125,107,0.4) rgba(201,184,150,0.5);
+  border-radius: 0;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 1px,
+      rgba(0,0,0,0.05) 1px,
+      rgba(0,0,0,0.05) 2px
+    ),
+    rgba(26, 22, 18, 0.9);
+  color: var(--text);
+  box-shadow: 
+    0 4px 12px rgba(0,0,0,0.5),
+    inset -2px -2px 0 rgba(0,0,0,0.5),
+    inset 2px 2px 0 rgba(201,184,150,0.2),
+    0 1px 0 rgba(0,0,0,0.4);
+  clip-path: polygon(
+    0 5px, 2px 3px, 5px 0,
+    calc(100% - 5px) 0, calc(100% - 2px) 3px, 100% 5px,
+    100% calc(100% - 5px), calc(100% - 2px) calc(100% - 3px), calc(100% - 5px) 100%,
+    5px 100%, 2px calc(100% - 3px), 0 calc(100% - 5px)
+  );
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+[data-theme="witcher"] select:hover,
+[data-theme="witcher"] .dropdown:hover {
+  border-color: var(--accent2) rgba(201,184,150,0.6) rgba(201,184,150,0.6) var(--accent2);
+  box-shadow: 
+    0 4px 12px rgba(0,0,0,0.5),
+    0 0 10px rgba(244,208,63,0.2),
+    inset -2px -2px 0 rgba(0,0,0,0.5),
+    inset 2px 2px 0 rgba(244,208,63,0.2);
+}
+
+[data-theme="witcher"] select:focus,
+[data-theme="witcher"] .dropdown:focus {
+  outline: none;
+  border-color: var(--accent2);
+  box-shadow: 
+    0 4px 12px rgba(0,0,0,0.5),
+    0 0 15px rgba(244,208,63,0.3),
+    inset -2px -2px 0 rgba(0,0,0,0.5),
+    inset 2px 2px 0 rgba(244,208,63,0.3);
+}
+
+/* Scrollbar styling */
+[data-theme="witcher"] ::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+[data-theme="witcher"] ::-webkit-scrollbar-track {
+  background: rgba(26, 22, 18, 0.9);
+  border: 2px solid rgba(139,125,107,0.4);
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+}
+
+[data-theme="witcher"] ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, 
+    rgba(201,184,150,0.6) 0%, 
+    rgba(139,125,107,0.7) 50%,
+    rgba(201,184,150,0.6) 100%);
+  border: 2px solid rgba(139,125,107,0.6);
+  box-shadow: 
+    inset -2px -2px 0 rgba(0,0,0,0.4),
+    inset 2px 2px 0 rgba(201,184,150,0.3),
+    0 0 8px rgba(244,208,63,0.1);
+}
+
+[data-theme="witcher"] ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, 
+    rgba(244,208,63,0.5) 0%, 
+    rgba(201,184,150,0.7) 50%,
+    rgba(244,208,63,0.5) 100%);
+  box-shadow: 
+    inset -2px -2px 0 rgba(0,0,0,0.5),
+    inset 2px 2px 0 rgba(244,208,63,0.4),
+    0 0 12px rgba(244,208,63,0.3);
+}
+
+[data-theme="witcher"] ::-webkit-scrollbar-corner {
+  background: rgba(26, 22, 18, 0.9);
+}
+
+[data-theme="witcher"] .header {
+  border-bottom: 2px solid rgba(201,184,150,0.3);
+  background: linear-gradient(135deg, 
+    rgba(26, 22, 18, 0.7) 0%, 
+    rgba(36, 32, 26, 0.6) 100%);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
 }
 
 /* Light mode - professional serif for headers */
